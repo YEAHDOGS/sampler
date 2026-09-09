@@ -5,7 +5,7 @@
     "type":  "module",
     "scripts":  {
                     "dev":  "vite",
-                    "test:smoke":  "node --test test/sampleService.test.js",
+                    "test:smoke":  "node --test test/*.test.js",
                     "build":  "vite build",
                     "test":  "vitest",
                     "test:ui":  "vitest run --ui",

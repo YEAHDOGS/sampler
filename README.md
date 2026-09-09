@@ -26,7 +26,11 @@ Try queries like: `sick snares` · `grunge claps` · `metal riffs` ·
 - **Display helpers** (`src/lib/formatSamples.js`): pure, zero-dependency
   duration/provider/license formatters consumed by the search UI,
   pinned by `test/formatSamples.test.js` (13 tests).
-- Search smoke tests: `npm run test:smoke` (24 zero-dependency tests, no
+- **Filters** (`src/lib/filterSamples.js` + SearchView filter bar): client-side
+  duration range, license-family filter, and sort (relevance / shortest /
+  longest / title A–Z). Filtering runs on fetched results — providers are
+  never re-queried. Pinned by `test/filterSamples.test.js` (18 tests).
+- Search smoke tests: `npm run test:smoke` (65 zero-dependency tests, no
   network).
 
 ## Quick start (2 minutes)
@@ -104,7 +108,8 @@ zero-warning builds, and layouts for all five viewport modes
 1. **Search UI** — ✅ landed (search input, result cards, `<audio>`
    previews, key settings). Next refinements: waveform peek, per-card
    tag chips.
-2. **Filters** — duration range, license filter, sort (relevance/downloads).
+2. **Filters** — ✅ landed (client-side duration range, license-family
+   pills, sort — no provider re-queries).
 3. **Key settings panel** — paste Freesound/Pixabay keys, stored locally.
 4. **Result caching** — localStorage/IndexedDB cache of recent searches to
    minimize provider requests (per AGENTS.md cost discipline).
