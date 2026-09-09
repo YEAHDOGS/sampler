@@ -30,7 +30,13 @@ Try queries like: `sick snares` · `grunge claps` · `metal riffs` ·
   duration range, license-family filter, and sort (relevance / shortest /
   longest / title A–Z). Filtering runs on fetched results — providers are
   never re-queried. Pinned by `test/filterSamples.test.js` (18 tests).
-- Search smoke tests: `npm run test:smoke` (65 zero-dependency tests, no
+- **Search caching** (`src/lib/searchCache.js` + `SampleSearchService`):
+  device-local localStorage cache of recent searches — repeat queries serve
+  instantly with a "from cache" badge, max 20 entries, 6h TTL, total outages
+  are never pinned. A "Clear search cache" control lives in the settings
+  panel (it never touches stored API keys). Pinned by
+  `test/searchCache.test.js` (20 tests).
+- Search smoke tests: `npm run test:smoke` (85 zero-dependency tests, no
   network).
 
 ## Quick start (2 minutes)
@@ -111,8 +117,9 @@ zero-warning builds, and layouts for all five viewport modes
 2. **Filters** — ✅ landed (client-side duration range, license-family
    pills, sort — no provider re-queries).
 3. **Key settings panel** — paste Freesound/Pixabay keys, stored locally.
-4. **Result caching** — localStorage/IndexedDB cache of recent searches to
-   minimize provider requests (per AGENTS.md cost discipline).
+4. **Result caching** — ✅ landed (device-local localStorage cache of recent
+   searches — repeat queries serve instantly with a "from cache" badge; 20
+   entries max, 6h TTL; clearable from the settings panel).
 5. **AI processing** — the README-original vision: analyze searched samples
    (BPM/key detection, similarity) to rank and suggest. Freesound's content
    search (`lowlevel.*` descriptors) is a natural first step.
