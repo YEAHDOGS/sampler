@@ -43,8 +43,11 @@ Field rules:
 - `durationSeconds` also accepts the `duration` alias produced by
   `analyzeBuffer()` — same seconds.
 - `timeSignature` is always 4/4; the bar grid in `markers` assumes it.
-- `slices` / `loops` are passthrough (validated, not invented): they carry
-  whatever slice/loop points a future analysis slice detects.
+- `slices` are auto-detected transients: `analyzeBuffer()` runs
+  `detectSlicePoints()` (adaptive peak-picking on the onset envelope, 50 ms
+  refractory merge) and labels them `Slice 1…N`; exported markers place them
+  on the bar grid off the detected BPM as `kind="slice"` rows. `loops`
+  remain passthrough (validated, not invented).
 - `similarity` is a passthrough slot for `analysisSimilarity()`-style
   output; `null` today.
 
