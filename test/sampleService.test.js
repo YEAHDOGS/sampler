@@ -373,4 +373,41 @@ describe('FreesoundProvider edge cases', () => {
       `pageUrl fallback should embed the sound id, got: ${hit.pageUrl}`,
     );
   });
+
+  it('falls back to /s/<id>/ (302s to canonical) when username is missing', async () => {
+    stubFetch(() =>
+      jsonResponse({
+        count: 1,
+        results: [{ id: 7, name: 'Nameless Hit' }], // no url, no username
+      }),
+    );
+    const provider = new FreesoundProvider();
+    const result = await provider.search('kick', { keys: { freesound: 'KEY' } });
+    assert.equal(result.error, null);
+    assert.equal(result.results[0].pageUrl, 'https://freesound.org/s/7/');
+  });
+
+  it('builds the canonical people URL when username is present but url is not', async () => {
+    stubFetch(() =>
+      jsonResponse({
+        count: 1,
+        results: [{ id: 9, name: 'Snare', username: 'dogs' }],
+      }),
+    );
+    const provider = new FreesoundProvider();
+    const result = await provider.search('kick', { keys: { freesound: 'KEY' } });
+    assert.equal(
+      result.results[0].pageUrl,
+      'https://freesound.org/people/dogs/sounds/9/',
+    );
+  });
+
+  it('clamps page_size into Freesound\'s 1..100 range', async () => {
+    stubFetch(() => jsonResponse({ count: 0, results: [] }));
+    const provider = new FreesoundProvider();
+    await provider.search('kick', { keys: { freesound: 'KEY' }, limit: 500 });
+    assert.ok(fetchCalls[0].includes('page_size=100'), fetchCalls[0]);
+    await provider.search('kick', { keys: { freesound: 'KEY' }, limit: 0 });
+    assert.ok(fetchCalls[1].includes('page_size=1'), fetchCalls[1]);
+  });
 });
