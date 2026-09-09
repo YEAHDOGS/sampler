@@ -65,6 +65,10 @@
     "clear_filters": "Clear",
     "cached_badge": "from cache",
     "clear_cache": "Clear search cache",
-    "cache_cleared": "Search cache cleared — next searches hit the providers fresh."
+    "cache_cleared": "Search cache cleared — next searches hit the providers fresh.",
+    "analyze": "Analyze",
+    "analyzing": "Analyzing…",
+    "analysis_failed": "Analysis failed — retry",
+    "analysis_title": "Detected tempo and key, analyzed on this device"
   }
 }

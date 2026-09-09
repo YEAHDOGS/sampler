@@ -65,6 +65,10 @@
     "clear_filters": "Limpiar",
     "cached_badge": "desde caché",
     "clear_cache": "Borrar caché de búsqueda",
-    "cache_cleared": "Caché de búsqueda borrada — las próximas búsquedas consultarán los proveedores."
+    "cache_cleared": "Caché de búsqueda borrada — las próximas búsquedas consultarán los proveedores.",
+    "analyze": "Analizar",
+    "analyzing": "Analizando…",
+    "analysis_failed": "Análisis falló — reintentar",
+    "analysis_title": "Tempo y tonalidad detectados, analizados en este dispositivo"
   }
 }
