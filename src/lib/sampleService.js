@@ -19,6 +19,8 @@ const PROVIDER_PIXABAY = 'pixabay';
 const FREESOUND_SEARCH_URL = 'https://freesound.org/apiv2/search/text/';
 const FREESOUND_FIELDS = 'id,name,previews,duration,license,url,tags,username';
 const FREESOUND_PAGE_SIZE = 24;
+/** Freesound APIv2 rejects page_size above 100 — clamp, never error. */
+const FREESOUND_MAX_PAGE_SIZE = 100;
 
 const ARCHIVE_SEARCH_URL = 'https://archive.org/advancedsearch.php';
 const ARCHIVE_METADATA_URL = 'https://archive.org/metadata/';
@@ -140,7 +142,10 @@ class FreesoundProvider extends BaseSampleProvider {
       };
     }
 
-    const limit = options.limit ?? FREESOUND_PAGE_SIZE;
+    const limit = Math.min(
+      Math.max(options.limit ?? FREESOUND_PAGE_SIZE, 1),
+      FREESOUND_MAX_PAGE_SIZE,
+    );
     const page = options.page ?? 1;
     const params = new URLSearchParams({
       query,
@@ -162,7 +167,13 @@ class FreesoundProvider extends BaseSampleProvider {
         title: sound.name ?? 'Untitled',
         duration: typeof sound.duration === 'number' ? sound.duration : null,
         previewUrl: previews['preview-hq-mp3'] ?? previews['preview-lq-mp3'] ?? null,
-        pageUrl: sound.url ?? `https://freesound.org/people/${sound.username}/sounds/${sound.id}/`,
+        // https://freesound.org/s/<id>/ 302-redirects to the canonical page,
+        // so it is a safe fallback when the API omits both url and username.
+        pageUrl:
+          sound.url ??
+          (sound.username
+            ? `https://freesound.org/people/${sound.username}/sounds/${sound.id}/`
+            : `https://freesound.org/s/${sound.id}/`),
         license: sound.license ?? null,
         tags: Array.isArray(sound.tags) ? sound.tags : [],
       };
