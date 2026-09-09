@@ -4,6 +4,9 @@
   Search input → per-provider result cards → inline <audio> previews →
   license + attribution per hit, plus the BYO key settings panel
   (Freesound / Pixabay keys stored in the user's localStorage only).
+  Roadmap milestone #5 (slice 1): per-card "Analyze" runs on-device
+  BPM/key detection (src/lib/audioAnalysis.js) against the preview
+  stream and shows the result as chips on the card.
 
   Owns its scroll region (overflow-y-auto): the app shell locks body
   scrolling for the landing page, so results scroll inside this view.
@@ -35,6 +38,7 @@
     sortBuckets,
   } from "../lib/filterSamples.js";
   import { clearCache, defaultStore } from "../lib/searchCache.js";
+  import { analyzePreviewUrl } from "../lib/audioAnalysis.js";
 
   // ── Hoisted constants ──────────────────────────────────────────────
   const SEARCH_LIMIT = 24;
@@ -90,6 +94,37 @@
   let settingsSaved = false;
   let cacheCleared = false;
 
+  // ── Analysis state (roadmap #5 slice 1: on-device BPM/key per result) ──
+  // Keyed by provider:id; reset whenever a fresh result set arrives.
+  let analysis = {};
+
+  function analysisKey(result) {
+    return result.provider + ":" + result.id;
+  }
+
+  async function analyzeResult(result) {
+    const key = analysisKey(result);
+    if (!result.previewUrl) return;
+    const current = analysis[key];
+    if (current && current.status === "busy") return;
+    analysis = { ...analysis, [key]: { status: "busy" } };
+    try {
+      const found = await analyzePreviewUrl(result.previewUrl);
+      analysis = { ...analysis, [key]: { status: "done", result: found } };
+    } catch (err) {
+      analysis = { ...analysis, [key]: { status: "error" } };
+    }
+  }
+
+  function analysisLabel(found) {
+    const parts = [];
+    if (found.bpm != null) parts.push(Math.round(found.bpm) + " BPM");
+    if (found.key) {
+      parts.push(found.key + (found.mode === "minor" ? " min" : " maj"));
+    }
+    return parts.join(" · ");
+  }
+
   $: hasSearched = searchedQuery !== "";
   $: totalResults = buckets.reduce(
     (sum, bucket) => sum + bucket.results.length,
@@ -116,6 +151,7 @@
       searching = false;
       searchError = null;
       searchCached = false;
+      analysis = {};
       return;
     }
     searching = true;
@@ -128,7 +164,9 @@
       searchedQuery = envelope.query;
       searchCached = envelope.fromCache === true;
       rawBuckets = groupResultsByProvider(envelope.results, envelope.providers);
-      // New result set → re-enable every license family present.
+      // New result set → re-enable every license family present, and drop
+      // any per-card analysis from the previous set.
+      analysis = {};
       resetLicenseFilters();
     } catch (err) {
       searchError = err instanceof Error ? err.message : String(err);
@@ -553,6 +591,40 @@
                   >
                     {result.tags.slice(0, MAX_CARD_TAGS).join(" · ")}
                   </p>
+                {/if}
+                {#if result.previewUrl}
+                  {@const akey = analysisKey(result)}
+                  {@const astate = analysis[akey]}
+                  <div
+                    class="flex items-center gap-1.5 min-h-[1.75rem] flex-wrap"
+                    title={$t("search.analysis_title")}
+                  >
+                    {#if !astate || astate.status === "error"}
+                      <button
+                        type="button"
+                        on:click={() => analyzeResult(result)}
+                        class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2.5 py-1 transition-colors cursor-pointer"
+                      >
+                        ⚡ {astate && astate.status === "error"
+                          ? $t("search.analysis_failed")
+                          : $t("search.analyze")}
+                      </button>
+                    {:else if astate.status === "busy"}
+                      <span
+                        class="text-[10px] sm:text-[11px] uppercase tracking-widest text-neutral-500 animate-pulse"
+                        role="status"
+                      >
+                        {$t("search.analyzing")}
+                      </span>
+                    {:else if astate.result && analysisLabel(astate.result)}
+                      <span
+                        class="text-[10px] sm:text-[11px] font-semibold tracking-wide text-[#ff8899] bg-[#ff3344]/10 border border-[#ff3344]/30 rounded-full px-2.5 py-1"
+                        role="status"
+                      >
+                        {analysisLabel(astate.result)}
+                      </span>
+                    {/if}
+                  </div>
                 {/if}
                 <a
                   href={result.pageUrl}
