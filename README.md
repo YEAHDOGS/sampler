@@ -133,9 +133,19 @@ zero-warning builds, and layouts for all five viewport modes
 4. **Result caching** — ✅ landed (device-local localStorage cache of recent
    searches — repeat queries serve instantly with a "from cache" badge; 20
    entries max, 6h TTL; clearable from the settings panel).
-5. **AI processing** — the README-original vision: analyze searched samples
-   (BPM/key detection, similarity) to rank and suggest. Freesound's content
-   search (`lowlevel.*` descriptors) is a natural first step.
+5. **AI processing** — ✅ landed (slice 1, 2026-09-09): on-device
+   sample analysis, no provider re-queries. `src/lib/audioAnalysis.js`
+   (vanilla DSP, zero deps): BPM via onset-envelope autocorrelation
+   (5 ms hops, 4x upsample, parabolic peak refinement, fastest-peak
+   octave disambiguation — verified 13/14 tempos 60–180 BPM within
+   ±2 on synthesized click tracks), musical key via FFT chromagram
+   matched against Krumhansl-Schmuckler profiles (verified C major /
+   A minor on synthesized triads). Per-card "Analyze" button in the
+   search view decodes the preview stream and shows BPM + key chips;
+   `analysisSimilarity()` (half/double-time aware) is in place for the
+   next slice. Still open: similarity ranking / "find similar" sort,
+   suggest-next-sample, and Freesound `lowlevel.*` descriptor ranking
+   from the README-original vision.
 6. **Export** — download pack / copy attribution text per license.
 
 > Note: `src/app.scss` currently sets `overflow-y: hidden` and
