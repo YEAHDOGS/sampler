@@ -16,6 +16,13 @@
  */
 
 import { localFixtureResults } from './localFixtures.js';
+import {
+  makeCacheKey,
+  defaultStore,
+  readEntry,
+  writeEntry,
+  isCacheableEnvelope,
+} from './searchCache.js';
 
 // ── Hoisted constants ──────────────────────────────────────────────────────
 
@@ -79,6 +86,9 @@ function escapeArchiveQuery(query) {
  * @typedef {Object} SearchOptions
  * @property {number} [limit=24] Max results per provider.
  * @property {number} [page=1] 1-based page.
+ * @property {boolean} [cache=false] Reuse device-local cached results for
+ *   repeat queries (see `searchCache.js`); cache hits return the envelope
+ *   with `fromCache: true`. Total outages are never pinned.
  * @property {{ freesound?: string, pixabay?: string }} [keys] BYO API keys.
  *   Precedence: explicit `keys` > device-stored keys > dev `.env` (VITE_*).
  */
@@ -344,7 +354,7 @@ class SampleSearchService {
   /**
    * @param {string} query
    * @param {SearchOptions} [options]
-   * @returns {Promise<{ query: string, providers: ProviderResult[], results: SampleResult[] }>}
+   * @returns {Promise<{ query: string, providers: ProviderResult[], results: SampleResult[], fromCache?: boolean }>}
    */
   async searchAll(query, options = {}) {
     if (!query || !query.trim()) {
@@ -366,14 +376,36 @@ class SampleSearchService {
       keyedProviders.length > 0 && !anyKeyUsable
         ? [...this.providers, new LocalFixtureProvider()]
         : this.providers;
+    // Cache scope is the concrete provider set (degraded mode included) so a
+    // keyed search never reuses an offline-fixture entry and vice versa.
+    let cacheKey = null;
+    let store = null;
+    if (options.cache) {
+      store = defaultStore();
+      cacheKey = makeCacheKey(query, {
+        providers: activeProviders.map((p) => p.name),
+        limit: mergedOptions.limit ?? 24,
+        page: mergedOptions.page ?? 1,
+      });
+      const hit = readEntry(store, cacheKey);
+      if (hit) return { ...hit, fromCache: true };
+    }
     const settled = await Promise.all(
       activeProviders.map((p) => p.search(query, mergedOptions)),
     );
-    return {
+    const envelope = {
       query: query.trim(),
       providers: settled,
       results: settled.flatMap((r) => r.results),
     };
+    if (cacheKey && isCacheableEnvelope(envelope)) {
+      writeEntry(store, cacheKey, {
+        query: envelope.query,
+        providers: envelope.providers,
+        results: envelope.results,
+      });
+    }
+    return envelope;
   }
 }
 
