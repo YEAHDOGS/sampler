@@ -271,6 +271,30 @@ describe('InternetArchiveProvider', () => {
     );
     assert.equal(hit.duration, 3.2);
   });
+
+  it('escapes Lucene special chars so user input is searched literally', async () => {
+    stubFetch((url) =>
+      jsonResponse({ response: { numFound: 0, docs: [] } }),
+    );
+
+    const provider = new InternetArchiveProvider();
+    const result = await provider.search('hi-hat "deep" (808)');
+    assert.equal(result.error, null);
+    const q = new URL(fetchCalls[0]).searchParams.get('q');
+    // Decoded: hi\-hat \"deep\" \(808\)
+    assert.equal(q, 'mediatype:audio AND (hi\\-hat \\"deep\\" \\(808\\))');
+  });
+
+  it('leaves plain multi-word queries untouched', async () => {
+    stubFetch(() =>
+      jsonResponse({ response: { numFound: 0, docs: [] } }),
+    );
+
+    const provider = new InternetArchiveProvider();
+    await provider.search('sick snares');
+    const q = new URL(fetchCalls[0]).searchParams.get('q');
+    assert.equal(q, 'mediatype:audio AND (sick snares)');
+  });
 });
 
 describe('PixabayProvider', () => {

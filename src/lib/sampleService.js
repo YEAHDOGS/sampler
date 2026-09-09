@@ -27,9 +27,23 @@ const ARCHIVE_DETAILS_URL = 'https://archive.org/details/';
 const ARCHIVE_PAGE_SIZE = 24;
 /** Max identifiers to fan out to per-item metadata calls (keeps IA happy). */
 const ARCHIVE_METADATA_FANOUT = 8;
+/** Lucene syntax chars — backslash-escaped so user input is searched literally. */
+const ARCHIVE_QUERY_ESCAPE = /[+\-=&|><!(){}[\]^"~*?:\\/]/g;
 const AUDIO_EXTENSIONS = ['.mp3', '.ogg', '.oga', '.wav', '.flac', '.m4a'];
 
 const LOCAL_STORAGE_KEY = 'dogs-sampler:keys';
+
+/**
+ * Escape Lucene special characters so a user's raw query is searched
+ * literally on archive.org. Without this, producer staples like `hi-hat`,
+ * `"deep"`, or `808: sub` either break the query syntax or silently flip
+ * word meaning (Lucene `-` means NOT).
+ * @param {string} query
+ * @returns {string}
+ */
+function escapeArchiveQuery(query) {
+  return query.replace(ARCHIVE_QUERY_ESCAPE, (ch) => `\\${ch}`);
+}
 
 /**
  * @typedef {Object} SampleResult
@@ -174,7 +188,7 @@ class InternetArchiveProvider extends BaseSampleProvider {
     const page = options.page ?? 1;
 
     const searchParams = new URLSearchParams({
-      q: `mediatype:audio AND (${query})`,
+      q: `mediatype:audio AND (${escapeArchiveQuery(query)})`,
       'fl[]': ['identifier', 'title', 'duration'],
       rows: String(limit),
       page: String(page),
