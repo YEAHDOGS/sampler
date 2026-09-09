@@ -3,6 +3,7 @@
     "private":  true,
     "version":  "0.0.0",
     "type":  "module",
+    "bin":  { "sampler": "./bin/sampler.js" },
     "scripts":  {
                     "dev":  "vite",
                     "test:smoke":  "node --test test/*.test.js",
