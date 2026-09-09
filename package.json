@@ -7,6 +7,7 @@
                     "dev":  "vite",
                     "build":  "vite build",
                     "test":  "vitest",
+                    "test:node":  "node --test \"tests/*.test.mjs\"",
                     "test:ui":  "vitest run --ui",
                     "test:ui:coverage":  "vitest run --ui --coverage"
                 },
