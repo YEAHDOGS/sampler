@@ -13,7 +13,6 @@
 -->
 <script>
   import { t } from "svelte-i18n";
-  import { createEventDispatcher } from "svelte";
   import {
     SampleSearchService,
     getStoredKeys,
@@ -51,7 +50,10 @@
   const SEARCH_DEBOUNCE_MS = 450;
   const MAX_CARD_TAGS = 4;
 
-  const dispatch = createEventDispatcher();
+  // Optional callback prop — replaces the legacy Svelte 4 `close` event.
+  /** @type {() => void} */
+  let { onClose } = $props();
+
   const service = new SampleSearchService();
 
   // ── Search state ───────────────────────────────────────────────────
@@ -314,7 +316,7 @@
   }
 
   function closeView() {
-    dispatch("close");
+    onClose?.();
   }
 </script>
 
@@ -327,7 +329,7 @@
     <div class="flex items-center justify-between gap-3 mb-4 sm:mb-6">
       <button
         type="button"
-        on:click={closeView}
+        onclick={closeView}
         class="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-neutral-400 hover:text-[#ff3344] transition-colors cursor-pointer"
       >
         ← {$t("search.back")}
@@ -339,7 +341,7 @@
       </h2>
       <button
         type="button"
-        on:click={() => (settingsOpen = !settingsOpen)}
+        onclick={() => (settingsOpen = !settingsOpen)}
         aria-expanded={settingsOpen}
         aria-label={$t("search.settings_toggle")}
         class="text-neutral-400 hover:text-[#ff3344] transition-colors text-lg sm:text-xl cursor-pointer"
@@ -349,11 +351,11 @@
     </div>
 
     <!-- Search bar -->
-    <form on:submit={handleSubmit} class="flex gap-2 mb-4 sm:mb-6">
+    <form onsubmit={handleSubmit} class="flex gap-2 mb-4 sm:mb-6">
       <input
         type="search"
         bind:value={query}
-        on:input={scheduleSearch}
+        oninput={scheduleSearch}
         placeholder={$t("search.placeholder")}
         aria-label={$t("search.aria_input")}
         autocomplete="off"
@@ -374,7 +376,7 @@
         <div class="flex items-center gap-2 mb-2">
           <button
             type="button"
-            on:click={() => (filtersOpen = !filtersOpen)}
+            onclick={() => (filtersOpen = !filtersOpen)}
             aria-expanded={filtersOpen}
             aria-label={$t("search.filters_toggle_aria")}
             class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-neutral-400 hover:text-[#ff3344] transition-colors cursor-pointer"
@@ -392,7 +394,7 @@
           {#if anyFilterActive}
             <button
               type="button"
-              on:click={clearFilters}
+              onclick={clearFilters}
               class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-600 hover:text-white transition-colors cursor-pointer"
             >
               {$t("search.clear_filters")}
@@ -465,7 +467,7 @@
                   {#each availableLicenses as family (family)}
                     <button
                       type="button"
-                      on:click={() => toggleLicense(family)}
+                      onclick={() => toggleLicense(family)}
                       aria-pressed={activeLicenses.has(family)}
                       class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest rounded-full px-2.5 py-1 border transition-colors cursor-pointer {activeLicenses.has(
                         family,
@@ -493,7 +495,7 @@
                   </span>
                   <button
                     type="button"
-                    on:click={clearSimilarity}
+                    onclick={clearSimilarity}
                     class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-600 hover:text-white transition-colors cursor-pointer"
                   >
                     ✕ {$t("search.clear_similar")}
@@ -554,21 +556,21 @@
         <div class="flex items-center gap-3 mt-3">
           <button
             type="button"
-            on:click={persistKeys}
+            onclick={persistKeys}
             class="bg-[#ff3344] hover:bg-[#ff4455] text-white font-bold text-[11px] sm:text-xs uppercase tracking-widest rounded-lg px-4 py-2 transition-colors cursor-pointer"
           >
             {$t("search.save_keys")}
           </button>
           <button
             type="button"
-            on:click={resetKeys}
+            onclick={resetKeys}
             class="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-neutral-500 hover:text-white transition-colors cursor-pointer"
           >
             {$t("search.clear_keys")}
           </button>
           <button
             type="button"
-            on:click={clearSearchCache}
+            onclick={clearSearchCache}
             class="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-neutral-500 hover:text-white transition-colors cursor-pointer"
           >
             {$t("search.clear_cache")}
@@ -715,7 +717,7 @@
                     {#if !astate || astate.status === "error"}
                       <button
                         type="button"
-                        on:click={() => analyzeResult(result)}
+                        onclick={() => analyzeResult(result)}
                         class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2.5 py-1 transition-colors cursor-pointer"
                       >
                         ⚡ {astate && astate.status === "error"
@@ -738,7 +740,7 @@
                       </span>
                       <button
                         type="button"
-                        on:click={() => findSimilar(result)}
+                        onclick={() => findSimilar(result)}
                         title={$t("search.find_similar_title")}
                         class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2 py-1 transition-colors cursor-pointer"
                       >
@@ -750,7 +752,7 @@
                       >
                         <button
                           type="button"
-                          on:click={() =>
+                          onclick={() =>
                             downloadExport(result, astate.result, "json")}
                           class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2 py-1 transition-colors cursor-pointer"
                         >
@@ -758,7 +760,7 @@
                         </button>
                         <button
                           type="button"
-                          on:click={() =>
+                          onclick={() =>
                             downloadExport(result, astate.result, "csv")}
                           class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2 py-1 transition-colors cursor-pointer"
                         >
