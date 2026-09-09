@@ -8,13 +8,21 @@
  * API keys are never stored in the repo. Callers pass them in via
  * {@link SearchOptions.keys}, or persist them in the browser with
  * {@link saveKeys} / {@link getStoredKeys} (localStorage, user device only).
+ *
+ * Degraded mode: when no API key is configured for any keyed provider,
+ * {@link SampleSearchService} appends a {@link LocalFixtureProvider} serving
+ * the bundled offline fixtures, so the app still has playable samples
+ * instead of an empty, erroring page.
  */
+
+import { localFixtureResults } from './localFixtures.js';
 
 // ── Hoisted constants ──────────────────────────────────────────────────────
 
 const PROVIDER_FREESOUND = 'freesound';
 const PROVIDER_ARCHIVE = 'archive';
 const PROVIDER_PIXABAY = 'pixabay';
+const PROVIDER_LOCAL = 'local';
 
 const FREESOUND_SEARCH_URL = 'https://freesound.org/apiv2/search/text/';
 const FREESOUND_FIELDS = 'id,name,previews,duration,license,url,tags,username';
@@ -50,7 +58,7 @@ function escapeArchiveQuery(query) {
 /**
  * @typedef {Object} SampleResult
  * @property {string} id Provider-scoped identifier.
- * @property {string} provider One of 'freesound' | 'archive' | 'pixabay'.
+ * @property {string} provider One of 'freesound' | 'archive' | 'pixabay' | 'local'.
  * @property {string} title Human-readable title.
  * @property {number|null} duration Seconds, or null when unknown.
  * @property {string|null} previewUrl Direct streamable audio URL (or null).
@@ -303,6 +311,25 @@ class PixabayProvider extends BaseSampleProvider {
 }
 
 /**
+ * Local fixture provider (degraded / offline mode).
+ *
+ * Serves the bundled synthesized samples from `public/fixtures/` with no
+ * network access and no API key. Never called directly by the UI — the
+ * search service appends it when no keyed provider has a usable key.
+ */
+class LocalFixtureProvider extends BaseSampleProvider {
+  constructor() {
+    super(PROVIDER_LOCAL, false);
+  }
+
+  /** @param {string} query @param {SearchOptions} options @returns {Promise<ProviderResult>} */
+  async _search(query, options) {
+    const results = localFixtureResults();
+    return { provider: this.name, results, total: results.length, error: null };
+  }
+}
+
+/**
  * Fan-out search across every configured provider. Providers run in parallel
  * and fail independently — a dead provider shows an error card, not a dead page.
  */
@@ -328,8 +355,19 @@ class SampleSearchService {
       ...options,
       keys: { ...getEnvKeys(), ...getStoredKeys(), ...options.keys },
     };
+    // Degraded mode: at least one provider needs a key but none has one —
+    // append the bundled offline fixtures so the app still has playable
+    // samples. Custom provider lists with no keyed providers are left alone.
+    const keyedProviders = this.providers.filter((p) => p.requiresKey);
+    const anyKeyUsable = keyedProviders.some(
+      (p) => mergedOptions.keys?.[p.name],
+    );
+    const activeProviders =
+      keyedProviders.length > 0 && !anyKeyUsable
+        ? [...this.providers, new LocalFixtureProvider()]
+        : this.providers;
     const settled = await Promise.all(
-      this.providers.map((p) => p.search(query, mergedOptions)),
+      activeProviders.map((p) => p.search(query, mergedOptions)),
     );
     return {
       query: query.trim(),
@@ -406,6 +444,7 @@ export {
   FreesoundProvider,
   InternetArchiveProvider,
   PixabayProvider,
+  LocalFixtureProvider,
   SampleSearchService,
   getEnvKeys,
   getStoredKeys,
@@ -414,4 +453,5 @@ export {
   PROVIDER_FREESOUND,
   PROVIDER_ARCHIVE,
   PROVIDER_PIXABAY,
+  PROVIDER_LOCAL,
 };
