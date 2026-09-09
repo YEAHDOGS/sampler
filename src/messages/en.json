@@ -1,19 +1,19 @@
 {
   "meta": {
-    "title": "DOGS - Modern Svelte Template",
-    "description": "A lightweight, high-performance, responsive Svelte template with TailwindCSS, SCSS, and Multi-Language, Localization, and Internationalization (abbrev. i18n)."
+    "title": "DOGS Sampler — Royalty-Free Sample Discovery",
+    "description": "Search and preview royalty-free audio samples from Freesound, the Internet Archive, and Pixabay sound effects. Global sample discovery for producers, built for speed."
   },
   "app": {
     "title": "DOGS",
-    "tagline": "A premium, minimalist Svelte boilerplate crafted for speed and responsiveness.",
-    "intro": "This template is built by CaptainBrando for the homies. Fully optimized, lightweight, and ready for deployment.",
+    "tagline": "Royalty-free sample discovery, worldwide.",
+    "intro": "One search box, three deep crates: Freesound, the Internet Archive audio library, and Pixabay sound effects. Preview instantly, filter by duration and license, and pull the perfect sample for your next track.",
     "features": {
-      "i18n": "Internationalization",
-      "i18n_desc": "Built-in localization with svelte-i18n supporting async loaded dictionary files.",
-      "responsive": "Viewport Matrix",
-      "responsive_desc": "Agile layout styles that seamlessly scale from mobile screens up to TVs.",
-      "styles": "Tailwind & SCSS",
-      "styles_desc": "Powered by Tailwind CSS v4 and modular SCSS styles."
+      "search": "Global Search",
+      "search_desc": "Query Freesound, the Internet Archive, and Pixabay sound effects from a single search — no tab-hopping between sample sites.",
+      "preview": "Instant Preview",
+      "preview_desc": "Stream MP3 previews right in the browser before you commit. Waveform peeks and one-tap auditioning.",
+      "license": "Royalty-Free First",
+      "license_desc": "Every result carries its license up front — Creative Commons, public domain, or Pixabay terms — so you sample with confidence."
     },
     "footer": {
       "made_by": "Crafted by",

@@ -1,19 +1,19 @@
 {
   "meta": {
-    "title": "DOGS - Plantilla Svelte Moderna",
-    "description": "Una plantilla Svelte ligera, responsiva y de alto rendimiento con Tailwind CSS, SCSS y soporte multi-idioma, localización e internacionalización (abbrev. i18n)."
+    "title": "DOGS Sampler — Descubrimiento de samples libres de regalías",
+    "description": "Busca y escucha samples de audio libres de regalías de Freesound, Internet Archive y los efectos de sonido de Pixabay. Descubrimiento global de sonidos para productores, construido para la velocidad."
   },
   "app": {
     "title": "DOGS",
-    "tagline": "Una plantilla de Svelte premium y minimalista diseñada para velocidad y adaptabilidad.",
-    "intro": "Esta plantilla está desarrollada por CaptainBrando para los homies. Totalmente optimizada, ligera y lista para producción.",
+    "tagline": "Descubrimiento de samples libres de regalías, en todo el mundo.",
+    "intro": "Un solo buscador, tres grandes colecciones: Freesound, la biblioteca de audio de Internet Archive y los efectos de sonido de Pixabay. Escucha al instante, filtra por duración y licencia, y encuentra el sample perfecto para tu próximo track.",
     "features": {
-      "i18n": "Internacionalización",
-      "i18n_desc": "Localización integrada con svelte-i18n y carga asíncrona de diccionarios de idioma.",
-      "responsive": "Matriz de Pantallas",
-      "responsive_desc": "Estilos de diseño que se adaptan sin esfuerzo desde móviles hasta televisores.",
-      "styles": "Tailwind y SCSS",
-      "styles_desc": "Impulsado por Tailwind CSS v4 y estilos SCSS modulares."
+      "search": "Búsqueda global",
+      "search_desc": "Busca en Freesound, Internet Archive y los efectos de sonido de Pixabay desde un solo lugar, sin saltar entre pestañas.",
+      "preview": "Vista previa instantánea",
+      "preview_desc": "Reproduce las vistas previas MP3 directamente en el navegador antes de decidir. Formas de onda y audición con un solo toque.",
+      "license": "Libres de regalías primero",
+      "license_desc": "Cada resultado muestra su licencia de frente — Creative Commons, dominio público o los términos de Pixabay — para samplear con confianza."
     },
     "footer": {
       "made_by": "Creado por",
