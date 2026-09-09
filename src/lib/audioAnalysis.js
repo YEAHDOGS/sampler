@@ -2,8 +2,9 @@
  * DOGS Sampler — client-side audio analysis (roadmap milestone #5, slice 1).
  *
  * Vanilla DSP, zero dependencies: BPM via onset-envelope autocorrelation,
- * musical key via FFT chromagram matched against Krumhansl-Schmuckler
- * profiles. Runs entirely on-device against a decoded preview — no provider
+ * transient slice-point detection via adaptive peak-picking on that same
+ * onset envelope, musical key via FFT chromagram matched against
+ * Krumhansl-Schmuckler profiles. Runs entirely on-device against a decoded preview — no provider
  * re-queries, no network beyond fetching the preview itself.
  *
  * All estimators are pure functions of (Float32Array, sampleRate) so they
@@ -36,6 +37,9 @@ const PROFILE_MINOR = [
   6.33, 2.68, 3.52, 5.38, 2.6, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17,
 ];
 const SIMILARITY_BPM_TOLERANCE = 40; // BPM difference that scores zero
+const SLICE_MIN_SPACING_S = 0.05; // refractory window: merge re-triggers closer than this
+const SLICE_THRESHOLD_FACTOR = 0.45; // adaptive threshold: median + factor × (max − median)
+const SLICE_MAX_POINTS = 256; // sanity cap on emitted slice points
 
 /**
  * In-place iterative radix-2 FFT. `re`/`im` are same-length Float64Arrays
@@ -104,6 +108,28 @@ function pearson(xs, ys) {
 }
 
 /**
+ * Positive spectral-flux-style onset envelope from short-window energy.
+ * Shared by the tempo estimator and the slice-point detector.
+ * @returns {{env: Float64Array, envRate: number}} envRate in frames/second
+ */
+function fluxEnvelope(samples, sampleRate) {
+  const hop = Math.max(1, Math.round(sampleRate * ENVELOPE_HOP_S));
+  const frames = Math.floor(samples.length / hop);
+  const env = new Float64Array(frames);
+  let prevEnergy = 0;
+  for (let f = 0; f < frames; f += 1) {
+    const start = f * hop;
+    const end = Math.min(start + hop, samples.length);
+    let energy = 0;
+    for (let i = start; i < end; i += 1) energy += samples[i] * samples[i];
+    energy /= end - start;
+    if (f > 0) env[f] = Math.max(0, energy - prevEnergy);
+    prevEnergy = energy;
+  }
+  return { env, envRate: sampleRate / hop };
+}
+
+/**
  * Estimate tempo from an onset envelope's autocorrelation.
  * @returns {{bpm:number, confidence:number}|null} bpm in [40,200]; confidence
  *   is the normalized autocorrelation peak in (0,1].
@@ -117,20 +143,8 @@ export function estimateBpm(samples, sampleRate) {
   ) {
     return null;
   }
-  const hop = Math.max(1, Math.round(sampleRate * ENVELOPE_HOP_S));
-  const frames = Math.floor(samples.length / hop);
-  // Positive spectral-flux-style onset envelope from short-window energy.
-  const onset = new Float64Array(frames);
-  let prevEnergy = 0;
-  for (let f = 0; f < frames; f += 1) {
-    const start = f * hop;
-    const end = Math.min(start + hop, samples.length);
-    let energy = 0;
-    for (let i = start; i < end; i += 1) energy += samples[i] * samples[i];
-    energy /= end - start;
-    if (f > 0) onset[f] = Math.max(0, energy - prevEnergy);
-    prevEnergy = energy;
-  }
+  const { env: onset, envRate: fluxRate } = fluxEnvelope(samples, sampleRate);
+  const frames = onset.length;
   // Light 3-frame box blur: razor-sharp onset spikes punish fractional
   // periods (e.g. 180 BPM = 66.67 hops) at the fundamental while their
   // on-grid half-time multiples correlate perfectly and steal the peak.
@@ -165,7 +179,7 @@ export function estimateBpm(samples, sampleRate) {
   let energy0 = 0;
   for (let f = 0; f < upLen; f += 1) energy0 += up[f] * up[f];
   if (energy0 <= 0) return null;
-  const envRate = (sampleRate / hop) * UPSAMPLE;
+  const envRate = fluxRate * UPSAMPLE;
   const minLag = Math.max(2, Math.round(envRate / (BPM_MAX / 60)));
   const maxLag = Math.min(upLen - 1, Math.round(envRate / (BPM_MIN / 60)));
   if (maxLag <= minLag) return null;
@@ -217,6 +231,62 @@ export function estimateBpm(samples, sampleRate) {
     bpm: (60 * envRate) / winner.lag,
     confidence: Math.min(1, Math.max(0, winner.height)),
   };
+}
+
+/**
+ * Detect transient slice points from onsets in a mono PCM buffer.
+ * Peak-picks the shared positive-flux onset envelope above an adaptive
+ * median-based threshold, with a refractory window so rapid re-triggers
+ * merge into one slice. The same slices feed the export markers CSV as
+ * kind="slice" rows (bar/beat placed off the detected BPM when known).
+ * @returns {{timeMs:number, confidence:number}[]} ascending in time;
+ *   empty array (never null) for unusable input
+ */
+export function detectSlicePoints(samples, sampleRate, options = {}) {
+  if (
+    !samples ||
+    !Number.isFinite(sampleRate) ||
+    sampleRate <= 0 ||
+    samples.length < sampleRate * MIN_ANALYSIS_SECONDS
+  ) {
+    return [];
+  }
+  const { env, envRate } = fluxEnvelope(samples, sampleRate);
+  if (env.length < 4) return [];
+  let max = 0;
+  for (let f = 0; f < env.length; f += 1) if (env[f] > max) max = env[f];
+  if (max <= 0) return [];
+  // Adaptive threshold: median + factor × (max − median) — scales from
+  // sparse clicks (median ~0) to dense grooves (median elevated).
+  const sorted = Array.from(env).sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const threshold = median + SLICE_THRESHOLD_FACTOR * (max - median);
+  if (threshold <= 0) return [];
+  const spacing = Number.isFinite(options.minSpacingSeconds) &&
+    options.minSpacingSeconds > 0
+    ? options.minSpacingSeconds
+    : SLICE_MIN_SPACING_S;
+  const refractoryFrames = Math.max(1, Math.round(spacing * envRate));
+  const maxPoints = Number.isFinite(options.maxPoints) && options.maxPoints > 0
+    ? Math.floor(options.maxPoints)
+    : SLICE_MAX_POINTS;
+  const picks = [];
+  let f = 1;
+  while (f < env.length - 1) {
+    if (env[f] > threshold && env[f] >= env[f - 1] && env[f] > env[f + 1]) {
+      picks.push({
+        timeMs: Math.round((f / envRate) * 1000),
+        confidence: Math.min(1, env[f] / max),
+      });
+      f += refractoryFrames; // merge rapid re-triggers into one slice
+      continue;
+    }
+    f += 1;
+  }
+  return picks
+    .sort((a, b) => b.confidence - a.confidence)
+    .slice(0, maxPoints)
+    .sort((a, b) => a.timeMs - b.timeMs);
 }
 
 /**
@@ -278,10 +348,10 @@ export function estimateKey(samples, sampleRate) {
 }
 
 /**
- * Full analysis pass over decoded mono PCM: BPM + key + duration.
+ * Full analysis pass over decoded mono PCM: BPM + key + duration + slices.
  * @returns {{bpm:number|null, bpmConfidence:number|null,
  *   key:string|null, mode:string|null, keyConfidence:number|null,
- *   duration:number}}
+ *   duration:number, slices:{timeMs:number, label:string}[]}}
  */
 export function analyzeBuffer(samples, sampleRate) {
   const capped = samples.length > sampleRate * ANALYSIS_MAX_SECONDS
@@ -289,6 +359,10 @@ export function analyzeBuffer(samples, sampleRate) {
     : samples;
   const bpm = estimateBpm(capped, sampleRate);
   const key = estimateKey(capped, sampleRate);
+  const slices = detectSlicePoints(capped, sampleRate).map((s, i) => ({
+    timeMs: s.timeMs,
+    label: `Slice ${i + 1}`,
+  }));
   return {
     bpm: bpm ? bpm.bpm : null,
     bpmConfidence: bpm ? bpm.confidence : null,
@@ -296,6 +370,7 @@ export function analyzeBuffer(samples, sampleRate) {
     mode: key ? key.mode : null,
     keyConfidence: key ? key.confidence : null,
     duration: samples.length / sampleRate,
+    slices,
   };
 }
 
