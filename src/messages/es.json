@@ -62,9 +62,23 @@
     "sort_duration_asc": "Más cortos primero",
     "sort_duration_desc": "Más largos primero",
     "sort_title_asc": "Título A–Z",
+    "sort_similar": "Más parecidos",
+    "find_similar": "Buscar parecidos",
+    "find_similar_title": "Ordena todos los resultados según qué tan bien encajan con esta pista (tempo + tonalidad)",
+    "similar_to": "Parecido a {title}",
+    "clear_similar": "Quitar",
+    "similar_hint": "Toca «Buscar parecidos» en cualquier tarjeta analizada para ordenar todos los resultados según ella — tempo y tonalidad, con medios/dobles tiempos.",
     "clear_filters": "Limpiar",
     "cached_badge": "desde caché",
     "clear_cache": "Borrar caché de búsqueda",
-    "cache_cleared": "Caché de búsqueda borrada — las próximas búsquedas consultarán los proveedores."
+    "cache_cleared": "Caché de búsqueda borrada — las próximas búsquedas consultarán los proveedores.",
+    "analyze": "Analizar",
+    "analyzing": "Analizando…",
+    "analysis_failed": "Análisis falló — reintentar",
+    "analysis_title": "Tempo y tonalidad detectados, analizados en este dispositivo",
+    "slices_count": "{count} cortes",
+    "export_json": "Exportar .json",
+    "export_csv": "Exportar .csv",
+    "export_title": "Descargar el análisis para tu DAW (Ableton)"
   }
 }
