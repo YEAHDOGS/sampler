@@ -62,6 +62,9 @@
     "sort_duration_asc": "Shortest first",
     "sort_duration_desc": "Longest first",
     "sort_title_asc": "Title A–Z",
-    "clear_filters": "Clear"
+    "clear_filters": "Clear",
+    "cached_badge": "from cache",
+    "clear_cache": "Clear search cache",
+    "cache_cleared": "Search cache cleared — next searches hit the providers fresh."
   }
 }

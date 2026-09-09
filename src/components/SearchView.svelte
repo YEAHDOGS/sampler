@@ -34,6 +34,7 @@
     filterBuckets,
     sortBuckets,
   } from "../lib/filterSamples.js";
+  import { clearCache, defaultStore } from "../lib/searchCache.js";
 
   // ── Hoisted constants ──────────────────────────────────────────────
   const SEARCH_LIMIT = 24;
@@ -50,6 +51,7 @@
   let rawBuckets = [];
   let searchError = null;
   let debounceTimer = null;
+  let searchCached = false;
 
   // ── Filter state (client-side, applied to fetched results — no re-query)
   let filtersOpen = false;
@@ -86,6 +88,7 @@
   let freesoundKey = getStoredKeys().freesound ?? "";
   let pixabayKey = getStoredKeys().pixabay ?? "";
   let settingsSaved = false;
+  let cacheCleared = false;
 
   $: hasSearched = searchedQuery !== "";
   $: totalResults = buckets.reduce(
@@ -112,6 +115,7 @@
       searchedQuery = "";
       searching = false;
       searchError = null;
+      searchCached = false;
       return;
     }
     searching = true;
@@ -119,8 +123,10 @@
     try {
       const envelope = await service.searchAll(trimmed, {
         limit: SEARCH_LIMIT,
+        cache: true,
       });
       searchedQuery = envelope.query;
+      searchCached = envelope.fromCache === true;
       rawBuckets = groupResultsByProvider(envelope.results, envelope.providers);
       // New result set → re-enable every license family present.
       resetLicenseFilters();
@@ -175,6 +181,12 @@
     clearKeys();
     freesoundKey = "";
     pixabayKey = "";
+    settingsSaved = false;
+  }
+
+  function clearSearchCache() {
+    clearCache(defaultStore());
+    cacheCleared = true;
     settingsSaved = false;
   }
 
@@ -403,12 +415,27 @@
           >
             {$t("search.clear_keys")}
           </button>
+          <button
+            type="button"
+            on:click={clearSearchCache}
+            class="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-neutral-500 hover:text-white transition-colors cursor-pointer"
+          >
+            {$t("search.clear_cache")}
+          </button>
           {#if settingsSaved}
             <span
               class="text-[11px] sm:text-xs text-emerald-400"
               role="status"
             >
               {$t("search.keys_saved")}
+            </span>
+          {/if}
+          {#if cacheCleared}
+            <span
+              class="text-[11px] sm:text-xs text-emerald-400"
+              role="status"
+            >
+              {$t("search.cache_cleared")}
             </span>
           {/if}
         </div>
@@ -432,6 +459,14 @@
         {$t("search.results_count", {
           values: { count: totalResults, query: searchedQuery },
         })}
+        {#if searchCached}
+          <span
+            class="ml-2 inline-block text-[10px] sm:text-xs uppercase tracking-widest text-neutral-600 border border-white/10 rounded-full px-2 py-0.5"
+            role="status"
+          >
+            {$t("search.cached_badge")}
+          </span>
+        {/if}
       </p>
     {:else}
       <p class="text-xs sm:text-sm text-neutral-600 mb-4">

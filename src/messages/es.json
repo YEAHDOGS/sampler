@@ -62,6 +62,9 @@
     "sort_duration_asc": "Más cortos primero",
     "sort_duration_desc": "Más largos primero",
     "sort_title_asc": "Título A–Z",
-    "clear_filters": "Limpiar"
+    "clear_filters": "Limpiar",
+    "cached_badge": "desde caché",
+    "clear_cache": "Borrar caché de búsqueda",
+    "cache_cleared": "Caché de búsqueda borrada — las próximas búsquedas consultarán los proveedores."
   }
 }
