@@ -31,6 +31,7 @@
     SORT_DURATION_ASC,
     SORT_DURATION_DESC,
     SORT_TITLE_ASC,
+    SORT_SIMILAR,
     SORT_KEYS,
     classifyLicense,
     licenseFamilyLabel,
@@ -38,7 +39,7 @@
     sortBuckets,
   } from "../lib/filterSamples.js";
   import { clearCache, defaultStore } from "../lib/searchCache.js";
-  import { analyzePreviewUrl } from "../lib/audioAnalysis.js";
+  import { analyzePreviewUrl, analysisSimilarity } from "../lib/audioAnalysis.js";
   import {
     buildSidecar,
     serializeSidecar,
@@ -85,11 +86,24 @@
       licenses: activeLicenses,
     }),
     sortKey,
+    { score: similarityScore },
   );
+  // Scorer injection for SORT_SIMILAR: binds the reference analysis to the
+  // per-card analysis map. Null when no reference is set (degrades to
+  // relevance order) so the lib stays scorer-free.
+  $: similarityScore =
+    sortKey === SORT_SIMILAR && similarityReference
+      ? (r) =>
+          analysisSimilarity(
+            similarityReference.analysis,
+            analysis[analysisKey(r)]?.result ?? null,
+          )
+      : null;
   $: anyFilterActive =
     minDurationInput !== "" ||
     maxDurationInput !== "" ||
     sortKey !== SORT_RELEVANCE ||
+    similarityReference !== null ||
     activeLicenses.size < availableLicenses.length;
 
   // ── Key settings state (BYO keys, device-local only) ────────────────
@@ -102,6 +116,11 @@
   // ── Analysis state (roadmap #5 slice 1: on-device BPM/key per result) ──
   // Keyed by provider:id; reset whenever a fresh result set arrives.
   let analysis = {};
+
+  // ── Similarity ranking (roadmap #5 slice 2): rank results against one
+  // analyzed "reference" card via analysisSimilarity. Client-side only —
+  // providers are never re-queried.
+  let similarityReference = null; // { title, analysis } | null
 
   function analysisKey(result) {
     return result.provider + ":" + result.id;
@@ -128,6 +147,18 @@
       parts.push(found.key + (found.mode === "minor" ? " min" : " maj"));
     }
     return parts.join(" · ");
+  }
+
+  function findSimilar(result) {
+    const astate = analysis[analysisKey(result)];
+    if (!astate || astate.status !== "done" || !astate.result) return;
+    similarityReference = { title: result.title, analysis: astate.result };
+    sortKey = SORT_SIMILAR;
+  }
+
+  function clearSimilarity() {
+    similarityReference = null;
+    sortKey = SORT_RELEVANCE;
   }
 
   // ── Export (roadmap #5 slice 2: JSON sidecar + markers CSV for DAWs) ──
@@ -181,6 +212,7 @@
     [SORT_DURATION_ASC]: $t("search.sort_duration_asc"),
     [SORT_DURATION_DESC]: $t("search.sort_duration_desc"),
     [SORT_TITLE_ASC]: $t("search.sort_title_asc"),
+    [SORT_SIMILAR]: $t("search.sort_similar"),
   };
 
   function scheduleSearch() {
@@ -210,9 +242,12 @@
       searchedQuery = envelope.query;
       searchCached = envelope.fromCache === true;
       rawBuckets = groupResultsByProvider(envelope.results, envelope.providers);
-      // New result set → re-enable every license family present, and drop
-      // any per-card analysis from the previous set.
+      // New result set → re-enable every license family present, drop
+      // per-card analysis from the previous set, and release the
+      // similarity reference (its track may be gone; sort degrades to
+      // relevance until the user picks a new reference).
       analysis = {};
+      similarityReference = null;
       resetLicenseFilters();
     } catch (err) {
       searchError = err instanceof Error ? err.message : String(err);
@@ -244,6 +279,7 @@
     minDurationInput = "";
     maxDurationInput = "";
     sortKey = SORT_RELEVANCE;
+    similarityReference = null;
     resetLicenseFilters();
   }
 
@@ -439,6 +475,34 @@
                   {/each}
                 </div>
               </fieldset>
+            {/if}
+
+            {#if sortKey === SORT_SIMILAR}
+              <div class="sm:col-span-2 lg:col-span-4 flex items-center gap-2 flex-wrap">
+                {#if similarityReference}
+                  <span
+                    class="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold tracking-wide text-[#ff8899] bg-[#ff3344]/10 border border-[#ff3344]/30 rounded-full px-2.5 py-1"
+                    role="status"
+                  >
+                    ≋ {$t("search.similar_to", {
+                      values: { title: similarityReference.title },
+                    })}
+                  </span>
+                  <button
+                    type="button"
+                    on:click={clearSimilarity}
+                    class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-600 hover:text-white transition-colors cursor-pointer"
+                  >
+                    ✕ {$t("search.clear_similar")}
+                  </button>
+                {:else}
+                  <p
+                    class="text-[10px] sm:text-xs text-neutral-600 leading-relaxed"
+                  >
+                    {$t("search.similar_hint")}
+                  </p>
+                {/if}
+              </div>
             {/if}
           </div>
         {/if}
@@ -669,6 +733,14 @@
                       >
                         {analysisLabel(astate.result)}
                       </span>
+                      <button
+                        type="button"
+                        on:click={() => findSimilar(result)}
+                        title={$t("search.find_similar_title")}
+                        class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2 py-1 transition-colors cursor-pointer"
+                      >
+                        ≋ {$t("search.find_similar")}
+                      </button>
                       <span
                         class="inline-flex items-center gap-1"
                         title={$t("search.export_title")}
