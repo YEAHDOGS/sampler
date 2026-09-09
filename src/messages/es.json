@@ -49,6 +49,19 @@
     "duration": "Duración {duration}",
     "no_preview": "Sin vista previa para este.",
     "audio_unsupported": "Tu navegador no puede reproducir audio.",
-    "attribution": "Atribución"
+    "attribution": "Atribución",
+    "filters": "Filtros",
+    "filters_toggle_aria": "Mostrar u ocultar filtros de resultados",
+    "filters_active": "on",
+    "min_duration": "Mín s",
+    "max_duration": "Máx s",
+    "duration_label": "Duración",
+    "license_filter": "Licencia",
+    "sort": "Ordenar",
+    "sort_relevance": "Relevancia",
+    "sort_duration_asc": "Más cortos primero",
+    "sort_duration_desc": "Más largos primero",
+    "sort_title_asc": "Título A–Z",
+    "clear_filters": "Limpiar"
   }
 }
