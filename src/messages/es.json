@@ -19,5 +19,36 @@
       "made_by": "Creado por",
       "for_homies": "para los homies"
     }
+  },
+  "search": {
+    "aria_view": "Resultados de búsqueda de samples",
+    "title": "A cavar",
+    "back": "Atrás",
+    "open": "Buscar samples",
+    "open_desc": "Busca en Freesound, Internet Archive y Pixabay desde un solo lugar — escucha al instante.",
+    "placeholder": "snares duros, 808 graves, truenos…",
+    "aria_input": "Buscar samples",
+    "go": "Cavar",
+    "searching": "Cavando…",
+    "hint": "Escribe arriba para buscar en Freesound e Internet Archive. ¿Sin clave? El kit sin conexión sigue sonando.",
+    "searching_for": "Cavando por “{query}”…",
+    "results_count": "{count} resultados para “{query}”",
+    "total": "{total} en total",
+    "error": "La búsqueda tuvo un problema: {error}",
+    "no_results": "Nada en las cajas para esa.",
+    "no_results_hint": "Prueba otro término — el kit incluido siempre responde a búsquedas simples.",
+    "offline_hint": "Sin claves de API — sonando el kit sin conexión para que tengas sonidos.",
+    "settings_toggle": "Configuración de claves API",
+    "settings_title": "Claves API (trae las tuyas)",
+    "settings_note": "Las claves viven solo en el localStorage de este navegador. Internet Archive no necesita clave.",
+    "freesound_key": "Clave API de Freesound",
+    "pixabay_key": "Clave API de Pixabay",
+    "save_keys": "Guardar claves",
+    "clear_keys": "Borrar claves",
+    "keys_saved": "Claves guardadas en este dispositivo.",
+    "duration": "Duración {duration}",
+    "no_preview": "Sin vista previa para este.",
+    "audio_unsupported": "Tu navegador no puede reproducir audio.",
+    "attribution": "Atribución"
   }
 }
