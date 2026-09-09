@@ -33,6 +33,7 @@ import {
   SORT_DURATION_ASC,
   SORT_DURATION_DESC,
   SORT_TITLE_ASC,
+  SORT_SIMILAR,
 } from '../src/lib/filterSamples.js';
 
 /** Minimal SampleResult factory for tests. */
@@ -243,6 +244,34 @@ describe('sortSamples', () => {
     assert.deepEqual(sortSamples([]), []);
     assert.deepEqual(sortSamples(null), []);
   });
+
+  it('sorts by descending similarity score when a scorer is provided', () => {
+    const results = [sample({ id: 'low' }), sample({ id: 'high' }), sample({ id: 'mid' })];
+    const scores = { low: 0.1, high: 0.9, mid: 0.5 };
+    const out = sortSamples(results, SORT_SIMILAR, { score: (r) => scores[r.id] });
+    assert.deepEqual(out.map((r) => r.id), ['high', 'mid', 'low']);
+    assert.notEqual(out, results);
+  });
+
+  it('treats unscored results as zero similarity', () => {
+    const results = [sample({ id: 'scored' }), sample({ id: 'unscored' })];
+    const out = sortSamples(results, SORT_SIMILAR, {
+      score: (r) => (r.id === 'scored' ? 0.4 : undefined),
+    });
+    assert.deepEqual(out.map((r) => r.id), ['scored', 'unscored']);
+  });
+
+  it('falls back to relevance when no scorer is provided for similar', () => {
+    const results = [sample({ id: 'b' }), sample({ id: 'a' })];
+    assert.deepEqual(
+      sortSamples(results, SORT_SIMILAR).map((r) => r.id),
+      ['b', 'a'],
+    );
+    assert.deepEqual(
+      sortSamples(results, SORT_SIMILAR, { score: 'not-a-function' }).map((r) => r.id),
+      ['b', 'a'],
+    );
+  });
 });
 
 describe('sortBuckets', () => {
@@ -260,5 +289,21 @@ describe('sortBuckets', () => {
     assert.deepEqual(out[0].results.map((r) => r.id), ['short', 'long']);
     assert.equal(out[0].provider, 'freesound');
     assert.equal(buckets[0].results[0].id, 'long'); // input untouched
+  });
+
+  it('passes the similarity scorer through to each bucket', () => {
+    const buckets = [
+      {
+        provider: 'freesound',
+        label: 'Freesound',
+        error: null,
+        total: 2,
+        results: [sample({ id: 'low' }), sample({ id: 'high' })],
+      },
+    ];
+    const scores = { low: 0.2, high: 0.8 };
+    const out = sortBuckets(buckets, SORT_SIMILAR, { score: (r) => scores[r.id] });
+    assert.deepEqual(out[0].results.map((r) => r.id), ['high', 'low']);
+    assert.equal(out[0].label, 'Freesound'); // metadata preserved
   });
 });
