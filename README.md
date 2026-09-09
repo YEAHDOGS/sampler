@@ -92,3 +92,7 @@ Sample licenses vary by provider and item (Creative Commons flavors,
 public domain, Pixabay terms). The app surfaces each result's license
 up front; **always check the license before publishing work that uses a
 sample**, and credit creators where required.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
