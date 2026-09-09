@@ -39,6 +39,11 @@
   } from "../lib/filterSamples.js";
   import { clearCache, defaultStore } from "../lib/searchCache.js";
   import { analyzePreviewUrl } from "../lib/audioAnalysis.js";
+  import {
+    buildSidecar,
+    serializeSidecar,
+    serializeMarkersCsv,
+  } from "../lib/analysisExport.js";
 
   // ── Hoisted constants ──────────────────────────────────────────────
   const SEARCH_LIMIT = 24;
@@ -123,6 +128,47 @@
       parts.push(found.key + (found.mode === "minor" ? " min" : " maj"));
     }
     return parts.join(" · ");
+  }
+
+  // ── Export (roadmap #5 slice 2: JSON sidecar + markers CSV for DAWs) ──
+  // Client-side download via a blob URL: no server, no persistence.
+  function sanitizeFilename(name) {
+    return (
+      String(name)
+        .replace(/[^a-z0-9-_]+/gi, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60) || "track"
+    );
+  }
+
+  function downloadExport(result, found, format) {
+    const payload = buildSidecar({
+      track: {
+        id: analysisKey(result),
+        title: result.title,
+        provider: result.provider,
+        previewUrl: result.previewUrl,
+        license: result.license,
+      },
+      analysis: { ...found, durationSeconds: found.duration },
+    });
+    const text =
+      format === "csv"
+        ? serializeMarkersCsv(payload.markers)
+        : serializeSidecar(payload);
+    const blob = new Blob([text], {
+      type: format === "csv" ? "text/csv" : "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${sanitizeFilename(result.title || analysisKey(result))}.${
+      format === "csv" ? "markers.csv" : "sampler.json"
+    }`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
   $: hasSearched = searchedQuery !== "";
@@ -622,6 +668,27 @@
                         role="status"
                       >
                         {analysisLabel(astate.result)}
+                      </span>
+                      <span
+                        class="inline-flex items-center gap-1"
+                        title={$t("search.export_title")}
+                      >
+                        <button
+                          type="button"
+                          on:click={() =>
+                            downloadExport(result, astate.result, "json")}
+                          class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2 py-1 transition-colors cursor-pointer"
+                        >
+                          {$t("search.export_json")}
+                        </button>
+                        <button
+                          type="button"
+                          on:click={() =>
+                            downloadExport(result, astate.result, "csv")}
+                          class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2 py-1 transition-colors cursor-pointer"
+                        >
+                          {$t("search.export_csv")}
+                        </button>
                       </span>
                     {/if}
                   </div>

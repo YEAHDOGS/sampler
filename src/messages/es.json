@@ -69,6 +69,9 @@
     "analyze": "Analizar",
     "analyzing": "Analizando…",
     "analysis_failed": "Análisis falló — reintentar",
-    "analysis_title": "Tempo y tonalidad detectados, analizados en este dispositivo"
+    "analysis_title": "Tempo y tonalidad detectados, analizados en este dispositivo",
+    "export_json": "Exportar .json",
+    "export_csv": "Exportar .csv",
+    "export_title": "Descargar el análisis para tu DAW (Ableton)"
   }
 }
