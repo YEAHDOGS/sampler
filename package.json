@@ -6,10 +6,9 @@
     "bin":  { "sampler": "./bin/sampler.js" },
     "scripts":  {
                     "dev":  "vite",
-                    "test:smoke":  "node --test test/*.test.js",
+                    "test:smoke":  "node --test test/*.test.js tests/smoke.mjs",
                     "build":  "vite build",
                     "test":  "vitest",
-                    "test:smoke":  "node --test tests/smoke.mjs",
                     "test:ui":  "vitest run --ui",
                     "test:ui:coverage":  "vitest run --ui --coverage"
                 },
