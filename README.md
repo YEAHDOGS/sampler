@@ -36,7 +36,7 @@ Try queries like: `sick snares` · `grunge claps` · `metal riffs` ·
   are never pinned. A "Clear search cache" control lives in the settings
   panel (it never touches stored API keys). Pinned by
   `test/searchCache.test.js` (20 tests).
-- Search smoke tests: `npm run test:smoke` (85 zero-dependency tests, no
+- Search smoke tests: `npm run test:smoke` (88 zero-dependency tests, no
   network).
 
 ## Quick start (2 minutes)
@@ -57,8 +57,21 @@ npm run dev        # or: ./start.sh   (Windows: .\start.ps1, node start.js)
    ```
 
    Internet Archive search works with no key at all.
-3. Sanity-check the service layer: `npm run test:smoke` (24 zero-dependency
+3. Sanity-check the service layer: `npm run test:smoke` (88 zero-dependency
    tests, no network).
+
+## Staging / deploy
+
+The production build is GitHub-Pages-ready via the conditional base path in
+`vite.config.js`: `npm run dev` serves at root, and building with
+`GITHUB_PAGES=1` emits everything under `/sampler/` for
+`https://yeahdogs.github.io/sampler/`. Never build with a personal
+`VITE_*` API key inlined — staging users enter their own keys in the app's
+Settings panel.
+
+```bash
+GITHUB_PAGES=1 npm run build   # then push the dist/ output to gh-pages
+```
 
 > `.env` is gitignored. Vite inlines `VITE_*` values into the client bundle
 > at build time, so `.env` keys are for **local dev only** — never ship a
