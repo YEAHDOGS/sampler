@@ -27,3 +27,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local env / secrets (API keys must never be committed)
+.env
+.env.*
+!.env.example
+
+# Vite / framework caches
+.vite/
+.svelte-kit/
+
+# Test artifacts
+coverage/
+.nyc_output/
+
+# Generated data / scratch (per AGENTS.md background-script rule)
+data/
+scratch/
+*.tmp
