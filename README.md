@@ -61,6 +61,11 @@ explicit `options.keys` > stored keys > `VITE_*` env.
 | Freesound | [freesound.org/apiv2/apply](https://freesound.org/apiv2/apply) — see [API docs](https://freesound.org/docs/api/) | Passed as the `token` query param. Previews stream free; downloads need OAuth. |
 | Pixabay | [pixabay.com](https://pixabay.com) account → API docs | Provider stub for now — endpoint TBD. |
 | Internet Archive | none needed | `advancedsearch.php` + `metadata/` endpoints. |
+| Bundled fixtures | none needed | Offline fallback: 8 synthesized drum hits in `public/fixtures/`, served automatically when no keyed provider has a key. |
+
+> **Degraded mode:** with no API keys configured at all, searches still
+> return the bundled fixture kit (`local` provider) so the app never sits
+> empty or errors — no network, no keys, still playable.
 
 Future: keys may also be served through a DOGS API connection instead of
 manual entry.
