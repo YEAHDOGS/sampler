@@ -9,6 +9,7 @@
                     "test:smoke":  "node --test test/*.test.js",
                     "build":  "vite build",
                     "test":  "vitest",
+                    "test:smoke":  "node --test tests/smoke.mjs",
                     "test:ui":  "vitest run --ui",
                     "test:ui:coverage":  "vitest run --ui --coverage"
                 },
