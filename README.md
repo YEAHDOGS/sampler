@@ -28,15 +28,16 @@ Try queries like: `sick snares` · `grunge claps` · `metal riffs` ·
   pinned by `test/formatSamples.test.js` (13 tests).
 - **Filters** (`src/lib/filterSamples.js` + SearchView filter bar): client-side
   duration range, license-family filter, and sort (relevance / shortest /
-  longest / title A–Z). Filtering runs on fetched results — providers are
-  never re-queried. Pinned by `test/filterSamples.test.js` (18 tests).
+  longest / title A–Z / most similar). Filtering runs on fetched results —
+  providers are never re-queried. Pinned by `test/filterSamples.test.js`
+  (22 tests).
 - **Search caching** (`src/lib/searchCache.js` + `SampleSearchService`):
   device-local localStorage cache of recent searches — repeat queries serve
   instantly with a "from cache" badge, max 20 entries, 6h TTL, total outages
   are never pinned. A "Clear search cache" control lives in the settings
   panel (it never touches stored API keys). Pinned by
   `test/searchCache.test.js` (20 tests).
-- Search smoke tests: `npm run test:smoke` (88 zero-dependency tests, no
+- Search smoke tests: `npm run test:smoke` (138 zero-dependency tests, no
   network).
 
 ## Quick start (2 minutes)
@@ -133,10 +134,32 @@ zero-warning builds, and layouts for all five viewport modes
 4. **Result caching** — ✅ landed (device-local localStorage cache of recent
    searches — repeat queries serve instantly with a "from cache" badge; 20
    entries max, 6h TTL; clearable from the settings panel).
-5. **AI processing** — the README-original vision: analyze searched samples
-   (BPM/key detection, similarity) to rank and suggest. Freesound's content
-   search (`lowlevel.*` descriptors) is a natural first step.
-6. **Export** — download pack / copy attribution text per license.
+5. **AI processing** — ✅ landed (slices 1–2, 2026-09-09): on-device
+   sample analysis, no provider re-queries. `src/lib/audioAnalysis.js`
+   (vanilla DSP, zero deps): BPM via onset-envelope autocorrelation
+   (5 ms hops, 4x upsample, parabolic peak refinement, fastest-peak
+   octave disambiguation — verified 13/13 tempos 60–180 BPM within
+   ±2 on synthesized click tracks), musical key via FFT chromagram
+   matched against Krumhansl-Schmuckler profiles (verified C major /
+   A minor on synthesized triads), transient slice-point detection
+   (slice 3, 2026-09-09: adaptive peak-picking on the onset envelope,
+   50 ms refractory merge — pinned by `test/slicePoints.test.js`
+   against click grids and irregular transients within ±25 ms);
+   slice count shows on each analyzed card and slices export as
+   `kind="slice"` marker rows off the detected BPM. Per-card "Analyze" button in the
+   search view decodes the preview stream and shows BPM + key chips;
+   per-card "Find similar" (slice 2) ranks every result against the
+   analyzed track via `analysisSimilarity()` — half/double-time aware
+   tempo match plus key relation (same key / relative major-minor /
+   fifth) — surfaced as a "Most similar" sort mode with a reference
+   chip and one-tap clear. Still open: suggest-next-sample, and
+   Freesound `lowlevel.*` descriptor ranking from the README-original
+   vision.
+6. **Export** — ✅ landed (2026-09-09): JSON sidecar + DAW markers CSV
+   download buttons on every analyzed card (en+es), plus a
+   `sampler export <track-id> --format json|csv --out FILE` CLI in
+   `bin/` (`src/lib/analysisExport.js`, pinned by
+   `test/analysisExport.test.js`).
 
 > Note: `src/app.scss` currently sets `overflow-y: hidden` and
 > `touch-action: none` on `body` (landing-page lock). The results view will

@@ -4,6 +4,9 @@
   Search input → per-provider result cards → inline <audio> previews →
   license + attribution per hit, plus the BYO key settings panel
   (Freesound / Pixabay keys stored in the user's localStorage only).
+  Roadmap milestone #5 (slice 1): per-card "Analyze" runs on-device
+  BPM/key detection (src/lib/audioAnalysis.js) against the preview
+  stream and shows the result as chips on the card.
 
   Owns its scroll region (overflow-y-auto): the app shell locks body
   scrolling for the landing page, so results scroll inside this view.
@@ -28,6 +31,7 @@
     SORT_DURATION_ASC,
     SORT_DURATION_DESC,
     SORT_TITLE_ASC,
+    SORT_SIMILAR,
     SORT_KEYS,
     classifyLicense,
     licenseFamilyLabel,
@@ -35,6 +39,12 @@
     sortBuckets,
   } from "../lib/filterSamples.js";
   import { clearCache, defaultStore } from "../lib/searchCache.js";
+  import { analyzePreviewUrl, analysisSimilarity } from "../lib/audioAnalysis.js";
+  import {
+    buildSidecar,
+    serializeSidecar,
+    serializeMarkersCsv,
+  } from "../lib/analysisExport.js";
 
   // ── Hoisted constants ──────────────────────────────────────────────
   const SEARCH_LIMIT = 24;
@@ -76,11 +86,24 @@
       licenses: activeLicenses,
     }),
     sortKey,
+    { score: similarityScore },
   );
+  // Scorer injection for SORT_SIMILAR: binds the reference analysis to the
+  // per-card analysis map. Null when no reference is set (degrades to
+  // relevance order) so the lib stays scorer-free.
+  $: similarityScore =
+    sortKey === SORT_SIMILAR && similarityReference
+      ? (r) =>
+          analysisSimilarity(
+            similarityReference.analysis,
+            analysis[analysisKey(r)]?.result ?? null,
+          )
+      : null;
   $: anyFilterActive =
     minDurationInput !== "" ||
     maxDurationInput !== "" ||
     sortKey !== SORT_RELEVANCE ||
+    similarityReference !== null ||
     activeLicenses.size < availableLicenses.length;
 
   // ── Key settings state (BYO keys, device-local only) ────────────────
@@ -89,6 +112,98 @@
   let pixabayKey = getStoredKeys().pixabay ?? "";
   let settingsSaved = false;
   let cacheCleared = false;
+
+  // ── Analysis state (roadmap #5 slice 1: on-device BPM/key per result) ──
+  // Keyed by provider:id; reset whenever a fresh result set arrives.
+  let analysis = {};
+
+  // ── Similarity ranking (roadmap #5 slice 2): rank results against one
+  // analyzed "reference" card via analysisSimilarity. Client-side only —
+  // providers are never re-queried.
+  let similarityReference = null; // { title, analysis } | null
+
+  function analysisKey(result) {
+    return result.provider + ":" + result.id;
+  }
+
+  async function analyzeResult(result) {
+    const key = analysisKey(result);
+    if (!result.previewUrl) return;
+    const current = analysis[key];
+    if (current && current.status === "busy") return;
+    analysis = { ...analysis, [key]: { status: "busy" } };
+    try {
+      const found = await analyzePreviewUrl(result.previewUrl);
+      analysis = { ...analysis, [key]: { status: "done", result: found } };
+    } catch (err) {
+      analysis = { ...analysis, [key]: { status: "error" } };
+    }
+  }
+
+  function analysisLabel(found) {
+    const parts = [];
+    if (found.bpm != null) parts.push(Math.round(found.bpm) + " BPM");
+    if (found.key) {
+      parts.push(found.key + (found.mode === "minor" ? " min" : " maj"));
+    }
+    if (Array.isArray(found.slices) && found.slices.length > 0) {
+      parts.push($t("search.slices_count", { values: { count: found.slices.length } }));
+    }
+    return parts.join(" · ");
+  }
+
+  function findSimilar(result) {
+    const astate = analysis[analysisKey(result)];
+    if (!astate || astate.status !== "done" || !astate.result) return;
+    similarityReference = { title: result.title, analysis: astate.result };
+    sortKey = SORT_SIMILAR;
+  }
+
+  function clearSimilarity() {
+    similarityReference = null;
+    sortKey = SORT_RELEVANCE;
+  }
+
+  // ── Export (roadmap #5 slice 2: JSON sidecar + markers CSV for DAWs) ──
+  // Client-side download via a blob URL: no server, no persistence.
+  function sanitizeFilename(name) {
+    return (
+      String(name)
+        .replace(/[^a-z0-9-_]+/gi, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60) || "track"
+    );
+  }
+
+  function downloadExport(result, found, format) {
+    const payload = buildSidecar({
+      track: {
+        id: analysisKey(result),
+        title: result.title,
+        provider: result.provider,
+        previewUrl: result.previewUrl,
+        license: result.license,
+      },
+      analysis: { ...found, durationSeconds: found.duration },
+    });
+    const text =
+      format === "csv"
+        ? serializeMarkersCsv(payload.markers)
+        : serializeSidecar(payload);
+    const blob = new Blob([text], {
+      type: format === "csv" ? "text/csv" : "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${sanitizeFilename(result.title || analysisKey(result))}.${
+      format === "csv" ? "markers.csv" : "sampler.json"
+    }`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
 
   $: hasSearched = searchedQuery !== "";
   $: totalResults = buckets.reduce(
@@ -100,6 +215,7 @@
     [SORT_DURATION_ASC]: $t("search.sort_duration_asc"),
     [SORT_DURATION_DESC]: $t("search.sort_duration_desc"),
     [SORT_TITLE_ASC]: $t("search.sort_title_asc"),
+    [SORT_SIMILAR]: $t("search.sort_similar"),
   };
 
   function scheduleSearch() {
@@ -116,6 +232,7 @@
       searching = false;
       searchError = null;
       searchCached = false;
+      analysis = {};
       return;
     }
     searching = true;
@@ -128,7 +245,12 @@
       searchedQuery = envelope.query;
       searchCached = envelope.fromCache === true;
       rawBuckets = groupResultsByProvider(envelope.results, envelope.providers);
-      // New result set → re-enable every license family present.
+      // New result set → re-enable every license family present, drop
+      // per-card analysis from the previous set, and release the
+      // similarity reference (its track may be gone; sort degrades to
+      // relevance until the user picks a new reference).
+      analysis = {};
+      similarityReference = null;
       resetLicenseFilters();
     } catch (err) {
       searchError = err instanceof Error ? err.message : String(err);
@@ -160,6 +282,7 @@
     minDurationInput = "";
     maxDurationInput = "";
     sortKey = SORT_RELEVANCE;
+    similarityReference = null;
     resetLicenseFilters();
   }
 
@@ -355,6 +478,34 @@
                   {/each}
                 </div>
               </fieldset>
+            {/if}
+
+            {#if sortKey === SORT_SIMILAR}
+              <div class="sm:col-span-2 lg:col-span-4 flex items-center gap-2 flex-wrap">
+                {#if similarityReference}
+                  <span
+                    class="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold tracking-wide text-[#ff8899] bg-[#ff3344]/10 border border-[#ff3344]/30 rounded-full px-2.5 py-1"
+                    role="status"
+                  >
+                    ≋ {$t("search.similar_to", {
+                      values: { title: similarityReference.title },
+                    })}
+                  </span>
+                  <button
+                    type="button"
+                    on:click={clearSimilarity}
+                    class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-600 hover:text-white transition-colors cursor-pointer"
+                  >
+                    ✕ {$t("search.clear_similar")}
+                  </button>
+                {:else}
+                  <p
+                    class="text-[10px] sm:text-xs text-neutral-600 leading-relaxed"
+                  >
+                    {$t("search.similar_hint")}
+                  </p>
+                {/if}
+              </div>
             {/if}
           </div>
         {/if}
@@ -553,6 +704,69 @@
                   >
                     {result.tags.slice(0, MAX_CARD_TAGS).join(" · ")}
                   </p>
+                {/if}
+                {#if result.previewUrl}
+                  {@const akey = analysisKey(result)}
+                  {@const astate = analysis[akey]}
+                  <div
+                    class="flex items-center gap-1.5 min-h-[1.75rem] flex-wrap"
+                    title={$t("search.analysis_title")}
+                  >
+                    {#if !astate || astate.status === "error"}
+                      <button
+                        type="button"
+                        on:click={() => analyzeResult(result)}
+                        class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2.5 py-1 transition-colors cursor-pointer"
+                      >
+                        ⚡ {astate && astate.status === "error"
+                          ? $t("search.analysis_failed")
+                          : $t("search.analyze")}
+                      </button>
+                    {:else if astate.status === "busy"}
+                      <span
+                        class="text-[10px] sm:text-[11px] uppercase tracking-widest text-neutral-500 animate-pulse"
+                        role="status"
+                      >
+                        {$t("search.analyzing")}
+                      </span>
+                    {:else if astate.result && analysisLabel(astate.result)}
+                      <span
+                        class="text-[10px] sm:text-[11px] font-semibold tracking-wide text-[#ff8899] bg-[#ff3344]/10 border border-[#ff3344]/30 rounded-full px-2.5 py-1"
+                        role="status"
+                      >
+                        {analysisLabel(astate.result)}
+                      </span>
+                      <button
+                        type="button"
+                        on:click={() => findSimilar(result)}
+                        title={$t("search.find_similar_title")}
+                        class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2 py-1 transition-colors cursor-pointer"
+                      >
+                        ≋ {$t("search.find_similar")}
+                      </button>
+                      <span
+                        class="inline-flex items-center gap-1"
+                        title={$t("search.export_title")}
+                      >
+                        <button
+                          type="button"
+                          on:click={() =>
+                            downloadExport(result, astate.result, "json")}
+                          class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2 py-1 transition-colors cursor-pointer"
+                        >
+                          {$t("search.export_json")}
+                        </button>
+                        <button
+                          type="button"
+                          on:click={() =>
+                            downloadExport(result, astate.result, "csv")}
+                          class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-500 hover:text-[#ff3344] border border-white/10 hover:border-[#ff3344]/40 rounded-full px-2 py-1 transition-colors cursor-pointer"
+                        >
+                          {$t("search.export_csv")}
+                        </button>
+                      </span>
+                    {/if}
+                  </div>
                 {/if}
                 <a
                   href={result.pageUrl}
