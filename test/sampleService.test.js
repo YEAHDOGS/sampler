@@ -20,6 +20,7 @@ import {
   InternetArchiveProvider,
   PixabayProvider,
   SampleSearchService,
+  getEnvKeys,
   getStoredKeys,
   saveKeys,
   clearKeys,
@@ -329,6 +330,55 @@ describe('key storage', () => {
     assert.deepEqual(getStoredKeys(), {});
     globalThis.localStorage.setItem('dogs-sampler:keys', 'not-json{{{');
     assert.deepEqual(getStoredKeys(), {});
+  });
+});
+
+// ── Env key defaults (injectable source; never committed) ───────────────────
+
+describe('getEnvKeys', () => {
+  it('reads VITE_* keys and trims them', () => {
+    assert.deepEqual(
+      getEnvKeys({ VITE_FREESOUND_API_KEY: '  FS  ', VITE_PIXABAY_API_KEY: 'PX' }),
+      { freesound: 'FS', pixabay: 'PX' },
+    );
+  });
+
+  it('treats blank or missing vars as unset', () => {
+    assert.deepEqual(
+      getEnvKeys({ VITE_FREESOUND_API_KEY: '   ' }),
+      { freesound: undefined, pixabay: undefined },
+    );
+    assert.deepEqual(getEnvKeys({}), { freesound: undefined, pixabay: undefined });
+  });
+
+  it('defaults to import.meta.env (undefined in plain node) without throwing', () => {
+    assert.deepEqual(getEnvKeys(), { freesound: undefined, pixabay: undefined });
+  });
+});
+
+describe('SampleSearchService key precedence', () => {
+  class KeyEchoProvider extends BaseSampleProvider {
+    constructor() {
+      super('echo', false);
+    }
+    async _search(query, options) {
+      return {
+        provider: this.name,
+        results: [],
+        total: 0,
+        error: null,
+        _seenKeys: options.keys,
+      };
+    }
+  }
+
+  it('explicit options.keys beat stored/env defaults', async () => {
+    globalThis.localStorage = new MemoryStorage();
+    saveKeys({ freesound: 'STORED' });
+    const service = new SampleSearchService([new KeyEchoProvider()]);
+    const out = await service.searchAll('kick', { keys: { freesound: 'EXPLICIT' } });
+    assert.equal(out.providers[0]._seenKeys.freesound, 'EXPLICIT');
+    clearKeys();
   });
 });
 

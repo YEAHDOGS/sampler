@@ -72,6 +72,7 @@ function escapeArchiveQuery(query) {
  * @property {number} [limit=24] Max results per provider.
  * @property {number} [page=1] 1-based page.
  * @property {{ freesound?: string, pixabay?: string }} [keys] BYO API keys.
+ *   Precedence: explicit `keys` > device-stored keys > dev `.env` (VITE_*).
  */
 
 /**
@@ -322,8 +323,13 @@ class SampleSearchService {
     if (!query || !query.trim()) {
       return { query: '', providers: [], results: [] };
     }
+    // Key precedence: explicit call options > device-stored keys > dev `.env`.
+    const mergedOptions = {
+      ...options,
+      keys: { ...getEnvKeys(), ...getStoredKeys(), ...options.keys },
+    };
     const settled = await Promise.all(
-      this.providers.map((p) => p.search(query, options)),
+      this.providers.map((p) => p.search(query, mergedOptions)),
     );
     return {
       query: query.trim(),
@@ -331,6 +337,25 @@ class SampleSearchService {
       results: settled.flatMap((r) => r.results),
     };
   }
+}
+
+// ── Env key defaults (local dev only — `.env` is gitignored, keys never committed)
+
+/**
+ * Read default BYO API keys from Vite env vars (`VITE_FREESOUND_API_KEY`,
+ * `VITE_PIXABAY_API_KEY`). Note: Vite inlines `VITE_*` values into the
+ * client bundle at build time, so this is for local development only —
+ * never ship a public build with a personal key baked in.
+ * @param {Record<string, string|undefined>} [source] Defaults to `import.meta.env`; injectable for tests.
+ * @returns {{ freesound?: string, pixabay?: string }}
+ */
+function getEnvKeys(source) {
+  const env = source ?? import.meta.env ?? {};
+  const pick = (name) => {
+    const value = env[name];
+    return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+  };
+  return { freesound: pick('VITE_FREESOUND_API_KEY'), pixabay: pick('VITE_PIXABAY_API_KEY') };
 }
 
 // ── Browser key storage (user device only — never committed) ───────────────
@@ -382,6 +407,7 @@ export {
   InternetArchiveProvider,
   PixabayProvider,
   SampleSearchService,
+  getEnvKeys,
   getStoredKeys,
   saveKeys,
   clearKeys,
