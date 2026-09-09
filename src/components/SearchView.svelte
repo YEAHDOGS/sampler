@@ -22,6 +22,18 @@
     licenseShort,
     groupResultsByProvider,
   } from "../lib/formatSamples.js";
+  import {
+    LICENSE_FAMILIES,
+    SORT_RELEVANCE,
+    SORT_DURATION_ASC,
+    SORT_DURATION_DESC,
+    SORT_TITLE_ASC,
+    SORT_KEYS,
+    classifyLicense,
+    licenseFamilyLabel,
+    filterBuckets,
+    sortBuckets,
+  } from "../lib/filterSamples.js";
 
   // ── Hoisted constants ──────────────────────────────────────────────
   const SEARCH_LIMIT = 24;
@@ -35,9 +47,39 @@
   let query = "";
   let searching = false;
   let searchedQuery = "";
-  let buckets = [];
+  let rawBuckets = [];
   let searchError = null;
   let debounceTimer = null;
+
+  // ── Filter state (client-side, applied to fetched results — no re-query)
+  let filtersOpen = false;
+  let minDurationInput = "";
+  let maxDurationInput = "";
+  let activeLicenses = new Set();
+  let sortKey = SORT_RELEVANCE;
+
+  $: availableLicenses = LICENSE_FAMILIES.filter((family) =>
+    rawBuckets.some((bucket) =>
+      bucket.results.some((r) => classifyLicense(r.license) === family),
+    ),
+  );
+  $: durationFilter = {
+    min: minDurationInput === "" ? null : Number(minDurationInput),
+    max: maxDurationInput === "" ? null : Number(maxDurationInput),
+  };
+  $: buckets = sortBuckets(
+    filterBuckets(rawBuckets, {
+      minDuration: durationFilter.min,
+      maxDuration: durationFilter.max,
+      licenses: activeLicenses,
+    }),
+    sortKey,
+  );
+  $: anyFilterActive =
+    minDurationInput !== "" ||
+    maxDurationInput !== "" ||
+    sortKey !== SORT_RELEVANCE ||
+    activeLicenses.size < availableLicenses.length;
 
   // ── Key settings state (BYO keys, device-local only) ────────────────
   let settingsOpen = false;
@@ -50,6 +92,12 @@
     (sum, bucket) => sum + bucket.results.length,
     0,
   );
+  $: sortLabels = {
+    [SORT_RELEVANCE]: $t("search.sort_relevance"),
+    [SORT_DURATION_ASC]: $t("search.sort_duration_asc"),
+    [SORT_DURATION_DESC]: $t("search.sort_duration_desc"),
+    [SORT_TITLE_ASC]: $t("search.sort_title_asc"),
+  };
 
   function scheduleSearch() {
     if (debounceTimer) clearTimeout(debounceTimer);
@@ -60,7 +108,7 @@
   async function runSearch() {
     const trimmed = query.trim();
     if (!trimmed) {
-      buckets = [];
+      rawBuckets = [];
       searchedQuery = "";
       searching = false;
       searchError = null;
@@ -73,14 +121,40 @@
         limit: SEARCH_LIMIT,
       });
       searchedQuery = envelope.query;
-      buckets = groupResultsByProvider(envelope.results, envelope.providers);
+      rawBuckets = groupResultsByProvider(envelope.results, envelope.providers);
+      // New result set → re-enable every license family present.
+      resetLicenseFilters();
     } catch (err) {
       searchError = err instanceof Error ? err.message : String(err);
-      buckets = [];
+      rawBuckets = [];
       searchedQuery = trimmed;
     } finally {
       searching = false;
     }
+  }
+
+  function resetLicenseFilters() {
+    activeLicenses = new Set(
+      LICENSE_FAMILIES.filter((family) =>
+        rawBuckets.some((bucket) =>
+          bucket.results.some((r) => classifyLicense(r.license) === family),
+        ),
+      ),
+    );
+  }
+
+  function toggleLicense(family) {
+    const next = new Set(activeLicenses);
+    if (next.has(family)) next.delete(family);
+    else next.add(family);
+    activeLicenses = next;
+  }
+
+  function clearFilters() {
+    minDurationInput = "";
+    maxDurationInput = "";
+    sortKey = SORT_RELEVANCE;
+    resetLicenseFilters();
   }
 
   function handleSubmit(event) {
@@ -158,6 +232,122 @@
         {searching ? $t("search.searching") : $t("search.go")}
       </button>
     </form>
+
+    <!-- Filter bar: duration range, license families, sort -->
+    {#if hasSearched}
+      <div class="mb-4 sm:mb-6">
+        <div class="flex items-center gap-2 mb-2">
+          <button
+            type="button"
+            on:click={() => (filtersOpen = !filtersOpen)}
+            aria-expanded={filtersOpen}
+            aria-label={$t("search.filters_toggle_aria")}
+            class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-neutral-400 hover:text-[#ff3344] transition-colors cursor-pointer"
+          >
+            <span aria-hidden="true">⧩</span>
+            {$t("search.filters")}
+            {#if anyFilterActive}
+              <span
+                class="bg-[#ff3344]/20 text-[#ff3344] rounded-full px-2 py-0.5 normal-case tracking-normal"
+              >
+                {$t("search.filters_active")}
+              </span>
+            {/if}
+          </button>
+          {#if anyFilterActive}
+            <button
+              type="button"
+              on:click={clearFilters}
+              class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-neutral-600 hover:text-white transition-colors cursor-pointer"
+            >
+              {$t("search.clear_filters")}
+            </button>
+          {/if}
+        </div>
+
+        {#if filtersOpen}
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-3 sm:p-4 bg-[#0e0e12]/60 border border-white/5 rounded-xl"
+          >
+            <!-- Duration range -->
+            <fieldset class="flex flex-col gap-1.5">
+              <legend
+                class="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-0.5"
+              >
+                {$t("search.duration_label")} (s)
+              </legend>
+              <div class="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  bind:value={minDurationInput}
+                  aria-label={$t("search.min_duration")}
+                  placeholder={$t("search.min_duration")}
+                  class="w-full min-w-0 bg-black/40 border border-white/10 focus:border-[#ff3344]/60 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm text-white outline-none transition-colors"
+                />
+                <span class="text-neutral-600" aria-hidden="true">–</span>
+                <input
+                  type="number"
+                  min="0"
+                  bind:value={maxDurationInput}
+                  aria-label={$t("search.max_duration")}
+                  placeholder={$t("search.max_duration")}
+                  class="w-full min-w-0 bg-black/40 border border-white/10 focus:border-[#ff3344]/60 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm text-white outline-none transition-colors"
+                />
+              </div>
+            </fieldset>
+
+            <!-- Sort -->
+            <div class="flex flex-col gap-1.5">
+              <label
+                for="sampler-sort"
+                class="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-neutral-400"
+              >
+                {$t("search.sort")}
+              </label>
+              <select
+                id="sampler-sort"
+                bind:value={sortKey}
+                class="bg-black/40 border border-white/10 focus:border-[#ff3344]/60 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm text-white outline-none transition-colors cursor-pointer"
+              >
+                {#each SORT_KEYS as key (key)}
+                  <option value={key}>{sortLabels[key]}</option>
+                {/each}
+              </select>
+            </div>
+
+            <!-- License families -->
+            {#if availableLicenses.length > 0}
+              <fieldset
+                class="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-2"
+              >
+                <legend
+                  class="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-0.5"
+                >
+                  {$t("search.license_filter")}
+                </legend>
+                <div class="flex flex-wrap gap-1.5">
+                  {#each availableLicenses as family (family)}
+                    <button
+                      type="button"
+                      on:click={() => toggleLicense(family)}
+                      aria-pressed={activeLicenses.has(family)}
+                      class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest rounded-full px-2.5 py-1 border transition-colors cursor-pointer {activeLicenses.has(
+                        family,
+                      )
+                        ? 'bg-[#ff3344]/20 border-[#ff3344]/50 text-[#ff8899]'
+                        : 'border-white/10 text-neutral-500 hover:text-neutral-300'}"
+                    >
+                      {licenseFamilyLabel(family)}
+                    </button>
+                  {/each}
+                </div>
+              </fieldset>
+            {/if}
+          </div>
+        {/if}
+      </div>
+    {/if}
 
     <!-- Key settings panel (BYO keys, localStorage only — never committed) -->
     {#if settingsOpen}
