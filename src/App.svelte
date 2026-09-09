@@ -24,7 +24,7 @@
 </svelte:head>
 
 <main
-  class="h-100dvh max-h-100dvh w-full flex flex-col justify-between bg-[#050508] text-white p-4 sm:p-6 md:p-8 lg:p-12 select-none overflow-hidden relative"
+  class="h-dvh max-h-dvh w-full flex flex-col justify-between bg-[#050508] text-white p-4 sm:p-6 md:p-8 lg:p-12 select-none overflow-hidden relative"
 >
   <!-- Subtle Glowing background grids -->
   <div
@@ -72,7 +72,7 @@
     {#if showSearch}
       <!-- SEARCH VIEW: owns its own scroll region inside the locked shell -->
       <div class="w-full mx-auto {APP_MAX_WIDTH} flex-1 min-h-0 my-4 z-10">
-        <SearchView on:close={() => (showSearch = false)} />
+        <SearchView onClose={() => (showSearch = false)} />
       </div>
     {:else}
     <div
@@ -101,7 +101,7 @@
           <div class="flex flex-col items-center sm:items-start gap-1.5 mt-1">
             <button
               type="button"
-              on:click={() => (showSearch = true)}
+              onclick={() => (showSearch = true)}
               class="bg-[#ff3344] hover:bg-[#ff4455] text-white font-bold text-xs sm:text-sm uppercase tracking-widest rounded-xl px-6 sm:px-8 py-2.5 sm:py-3 transition-all duration-300 hover:shadow-[0_0_24px_rgba(255,51,68,0.35)] cursor-pointer"
             >
               {$t("search.open")}
