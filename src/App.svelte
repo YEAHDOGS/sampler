@@ -15,7 +15,7 @@
   <title>{$isLoading ? "DOGS" : $t("meta.title")}</title>
   <meta
     name="description"
-    content={$isLoading ? "DOGS template" : $t("meta.description")}
+    content={$isLoading ? "DOGS Sampler" : $t("meta.description")}
   />
 </svelte:head>
 
@@ -39,7 +39,7 @@
       <p
         class="text-xs font-semibold uppercase tracking-widest text-[#ff3344] animate-pulse"
       >
-        Loading DOGS template...
+        Loading DOGS Sampler...
       </p>
     </div>
   {:else}
@@ -114,10 +114,10 @@
           <h3
             class="text-xs sm:text-sm font-bold tracking-wide mb-1 group-hover:text-[#ff3344] transition-colors duration-300"
           >
-            {$t("app.features.i18n")}
+            {$t("app.features.search")}
           </h3>
           <p class="text-[10px] sm:text-xs text-neutral-500 leading-relaxed">
-            {$t("app.features.i18n_desc")}
+            {$t("app.features.search_desc")}
           </p>
         </div>
 
@@ -128,10 +128,10 @@
           <h3
             class="text-xs sm:text-sm font-bold tracking-wide mb-1 group-hover:text-[#ff3344] transition-colors duration-300"
           >
-            {$t("app.features.responsive")}
+            {$t("app.features.preview")}
           </h3>
           <p class="text-[10px] sm:text-xs text-neutral-500 leading-relaxed">
-            {$t("app.features.responsive_desc")}
+            {$t("app.features.preview_desc")}
           </p>
         </div>
 
@@ -142,10 +142,10 @@
           <h3
             class="text-xs sm:text-sm font-bold tracking-wide mb-1 group-hover:text-[#ff3344] transition-colors duration-300"
           >
-            {$t("app.features.styles")}
+            {$t("app.features.license")}
           </h3>
           <p class="text-[10px] sm:text-xs text-neutral-500 leading-relaxed">
-            {$t("app.features.styles_desc")}
+            {$t("app.features.license_desc")}
           </p>
         </div>
       </div>
