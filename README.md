@@ -37,7 +37,7 @@ Try queries like: `sick snares` · `grunge claps` · `metal riffs` ·
   are never pinned. A "Clear search cache" control lives in the settings
   panel (it never touches stored API keys). Pinned by
   `test/searchCache.test.js` (20 tests).
-- Search smoke tests: `npm run test:smoke` (126 zero-dependency tests, no
+- Search smoke tests: `npm run test:smoke` (128 zero-dependency tests, no
   network).
 
 ## Quick start (2 minutes)
@@ -138,7 +138,7 @@ zero-warning builds, and layouts for all five viewport modes
    sample analysis, no provider re-queries. `src/lib/audioAnalysis.js`
    (vanilla DSP, zero deps): BPM via onset-envelope autocorrelation
    (5 ms hops, 4x upsample, parabolic peak refinement, fastest-peak
-   octave disambiguation — verified 13/14 tempos 60–180 BPM within
+   octave disambiguation — verified 13/13 tempos 60–180 BPM within
    ±2 on synthesized click tracks), musical key via FFT chromagram
    matched against Krumhansl-Schmuckler profiles (verified C major /
    A minor on synthesized triads). Per-card "Analyze" button in the
