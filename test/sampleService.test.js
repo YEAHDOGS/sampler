@@ -307,3 +307,46 @@ describe('key storage', () => {
     assert.deepEqual(getStoredKeys(), {});
   });
 });
+
+// ── Freesound edge cases: malformed payloads and sparse hits ────────────────
+
+describe('FreesoundProvider edge cases', () => {
+  it('turns a malformed JSON body into an error envelope, never a throw', async () => {
+    stubFetch(() => jsonResponse(null));
+    const provider = new FreesoundProvider();
+    const result = await provider.search('kick', { keys: { freesound: 'KEY' } });
+    assert.deepEqual(result.results, []);
+    assert.equal(result.provider, PROVIDER_FREESOUND);
+    assert.ok(result.error, 'malformed body must surface as an error envelope');
+  });
+
+  it('reports HTTP failures with the status, not a crash', async () => {
+    stubFetch(() => jsonResponse({ message: 'rate limited' }, false, 429));
+    const provider = new FreesoundProvider();
+    const result = await provider.search('kick', { keys: { freesound: 'KEY' } });
+    assert.deepEqual(result.results, []);
+    assert.ok(result.error.includes('429'), `expected status in error, got: ${result.error}`);
+  });
+
+  it('normalizes sparse hits: nulls for missing fields, constructed pageUrl fallback', async () => {
+    stubFetch(() =>
+      jsonResponse({
+        count: 1,
+        results: [{ id: 7, name: 'Nameless Hit' }], // no previews, tags, url, username
+      }),
+    );
+    const provider = new FreesoundProvider();
+    const result = await provider.search('kick', { keys: { freesound: 'KEY' } });
+    assert.equal(result.error, null);
+    assert.equal(result.results.length, 1);
+    const hit = result.results[0];
+    assert.equal(hit.id, '7');
+    assert.equal(hit.previewUrl, null);
+    assert.equal(hit.duration, null);
+    assert.deepEqual(hit.tags, []);
+    assert.ok(
+      hit.pageUrl.includes('/7/'),
+      `pageUrl fallback should embed the sound id, got: ${hit.pageUrl}`,
+    );
+  });
+});
