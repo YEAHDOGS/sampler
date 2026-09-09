@@ -75,9 +75,10 @@ const SORT_RELEVANCE = 'relevance';
 const SORT_DURATION_ASC = 'duration-asc';
 const SORT_DURATION_DESC = 'duration-desc';
 const SORT_TITLE_ASC = 'title-asc';
+const SORT_SIMILAR = 'similar';
 
 /** Sort keys accepted by {@link sortSamples}, in UI display order. */
-const SORT_KEYS = [SORT_RELEVANCE, SORT_DURATION_ASC, SORT_DURATION_DESC, SORT_TITLE_ASC];
+const SORT_KEYS = [SORT_RELEVANCE, SORT_DURATION_ASC, SORT_DURATION_DESC, SORT_TITLE_ASC, SORT_SIMILAR];
 
 // ── License classification ─────────────────────────────────────────────────
 
@@ -191,12 +192,17 @@ function compareDuration(a, b, ascending) {
 /**
  * Sort samples for the results UI. Pure: returns a new array, input
  * untouched. `relevance` is a no-op pass-through preserving provider order;
- * unknown durations always sort to the end.
+ * unknown durations always sort to the end. `similar` orders by descending
+ * musical-similarity score computed by `options.score(result)` (0..1);
+ * without a scorer function it degrades to relevance. The scorer stays a
+ * caller-supplied injection so this module never depends on the analysis
+ * DSP library.
  * @param {Array<Object>} results {@link SampleResult}s.
  * @param {string} [sortKey] One of SORT_KEYS; unknown keys act as 'relevance'.
+ * @param {{ score?: (result: Object) => number }} [options] Scorer for SORT_SIMILAR.
  * @returns {Array<Object>} New sorted array.
  */
-function sortSamples(results, sortKey = SORT_RELEVANCE) {
+function sortSamples(results, sortKey = SORT_RELEVANCE, options = {}) {
   if (!Array.isArray(results) || results.length === 0) return [];
   const copy = [...results];
   if (sortKey === SORT_DURATION_ASC) copy.sort((a, b) => compareDuration(a, b, true));
@@ -207,6 +213,8 @@ function sortSamples(results, sortKey = SORT_RELEVANCE) {
         sensitivity: 'base',
       }),
     );
+  else if (sortKey === SORT_SIMILAR && typeof options.score === 'function')
+    copy.sort((a, b) => (options.score(b) ?? 0) - (options.score(a) ?? 0));
   return copy;
 }
 
@@ -215,13 +223,14 @@ function sortSamples(results, sortKey = SORT_RELEVANCE) {
  * metadata.
  * @param {Array<{ results: Array<Object>, [k: string]: unknown }>} buckets
  * @param {string} [sortKey]
+ * @param {{ score?: (result: Object) => number }} [options] Scorer for SORT_SIMILAR.
  * @returns {Array<{ results: Array<Object> }>}
  */
-function sortBuckets(buckets, sortKey = SORT_RELEVANCE) {
+function sortBuckets(buckets, sortKey = SORT_RELEVANCE, options = {}) {
   if (!Array.isArray(buckets)) return [];
   return buckets.map((bucket) => ({
     ...bucket,
-    results: sortSamples(bucket.results ?? [], sortKey),
+    results: sortSamples(bucket.results ?? [], sortKey, options),
   }));
 }
 
@@ -240,6 +249,7 @@ export {
   SORT_DURATION_ASC,
   SORT_DURATION_DESC,
   SORT_TITLE_ASC,
+  SORT_SIMILAR,
   SORT_KEYS,
   classifyLicense,
   licenseFamilyLabel,
