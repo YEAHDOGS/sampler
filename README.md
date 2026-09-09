@@ -21,21 +21,40 @@ Try queries like: `sick snares` · `grunge claps` · `metal riffs` ·
   preview player, API-key settings panel). The service layer is ready —
   the next milestone is a `SearchView` component that consumes it.
 
-## Quick start
+## Quick start (2 minutes)
 
 ```bash
 npm install
 npm run dev        # or: ./start.sh   (Windows: .\start.ps1, node start.js)
 ```
 
-Open the printed localhost URL. Per repo convention, keep `npm run dev`
-running in your own terminal while iterating.
+1. Open the printed localhost URL — the DOGS Sampler landing page loads.
+2. **Keys (optional, unlocks Freesound search):** grab a free key at
+   [freesound.org/apiv2/apply](https://freesound.org/apiv2/apply), then either
+   paste it into the app's Settings panel (stored only in your browser's
+   localStorage) or set it for local dev from `.env.example`:
+
+   ```bash
+   cp .env.example .env   # then add VITE_FREESOUND_API_KEY=... — never commit .env
+   ```
+
+   Internet Archive search works with no key at all.
+3. Sanity-check the service layer: `npm run test:smoke` (24 zero-dependency
+   tests, no network).
+
+> `.env` is gitignored. Vite inlines `VITE_*` values into the client bundle
+> at build time, so `.env` keys are for **local dev only** — never ship a
+> public build with a personal key baked in. Long-term, keys move behind a
+> DOGS API connection.
 
 ## API keys (bring your own)
 
 Search works out of the box for the Internet Archive (no key needed).
 Freesound and Pixabay need free keys, entered in the app's Settings panel
 and stored **only in your browser's localStorage** — never in the repo.
+For local development you can also use a gitignored `.env` file (see
+`.env.example`) — `searchAll` resolves keys as
+explicit `options.keys` > stored keys > `VITE_*` env.
 
 | Provider | Get a key | Notes |
 |---|---|---|
