@@ -1,6 +1,7 @@
 <script>
   import { t, isLoading } from "svelte-i18n";
   import LanguageSelector from "./components/LanguageSelector.svelte";
+  import SearchView from "./components/SearchView.svelte";
 
   // Import SVG assets as static resource URLs
   import logo from "./assets/logo.svg";
@@ -8,6 +9,9 @@
 
   // Constant configurations for layout metrics
   const APP_MAX_WIDTH = "max-w-7xl";
+
+  // View toggle: landing hero vs. search results (search owns its scroll).
+  let showSearch = false;
 </script>
 
 <!-- Dynamic Metadata Head tags managed via svelte-i18n -->
@@ -65,6 +69,12 @@
     </header>
 
     <!-- CENTER BODY (Fits strictly inside viewport bounds) -->
+    {#if showSearch}
+      <!-- SEARCH VIEW: owns its own scroll region inside the locked shell -->
+      <div class="w-full mx-auto {APP_MAX_WIDTH} flex-1 min-h-0 my-4 z-10">
+        <SearchView on:close={() => (showSearch = false)} />
+      </div>
+    {:else}
     <div
       class="w-full mx-auto {APP_MAX_WIDTH} flex-1 flex flex-col justify-center gap-6 sm:gap-8 lg:gap-12 my-4 overflow-hidden"
     >
@@ -86,6 +96,20 @@
           >
             {$t("app.intro")}
           </p>
+
+          <!-- CTA: open the search view (roadmap milestone #1) -->
+          <div class="flex flex-col items-center sm:items-start gap-1.5 mt-1">
+            <button
+              type="button"
+              on:click={() => (showSearch = true)}
+              class="bg-[#ff3344] hover:bg-[#ff4455] text-white font-bold text-xs sm:text-sm uppercase tracking-widest rounded-xl px-6 sm:px-8 py-2.5 sm:py-3 transition-all duration-300 hover:shadow-[0_0_24px_rgba(255,51,68,0.35)] cursor-pointer"
+            >
+              {$t("search.open")}
+            </button>
+            <p class="text-[10px] sm:text-[11px] text-neutral-600">
+              {$t("search.open_desc")}
+            </p>
+          </div>
         </div>
 
         <!-- Right: Swarm Hero Vector Art (sized dynamically to prevent overflow) -->
@@ -150,6 +174,7 @@
         </div>
       </div>
     </div>
+    {/if}
 
     <!-- BOTTOM FOOTER -->
     <footer

@@ -19,5 +19,36 @@
       "made_by": "Crafted by",
       "for_homies": "for the homies"
     }
+  },
+  "search": {
+    "aria_view": "Sample search results",
+    "title": "Dig the crates",
+    "back": "Back",
+    "open": "Search samples",
+    "open_desc": "Search Freesound, the Internet Archive, and Pixabay from one box — preview instantly.",
+    "placeholder": "sick snares, 808 subs, thunder…",
+    "aria_input": "Search samples",
+    "go": "Dig",
+    "searching": "Digging…",
+    "hint": "Type above to search Freesound and the Internet Archive. No key? The offline kit still plays.",
+    "searching_for": "Digging for “{query}”…",
+    "results_count": "{count} results for “{query}”",
+    "total": "{total} total",
+    "error": "Search hit a snag: {error}",
+    "no_results": "Nothing in the crates for that one.",
+    "no_results_hint": "Try a different term — the bundled kit always answers simple queries.",
+    "offline_hint": "No API keys set — playing the bundled offline kit so you still have sounds.",
+    "settings_toggle": "API key settings",
+    "settings_title": "API keys (bring your own)",
+    "settings_note": "Keys live only in this browser's localStorage. Internet Archive needs no key.",
+    "freesound_key": "Freesound API key",
+    "pixabay_key": "Pixabay API key",
+    "save_keys": "Save keys",
+    "clear_keys": "Clear keys",
+    "keys_saved": "Keys saved on this device.",
+    "duration": "Duration {duration}",
+    "no_preview": "No preview stream for this one.",
+    "audio_unsupported": "Your browser cannot play audio.",
+    "attribution": "Attribution"
   }
 }
