@@ -76,6 +76,7 @@
     "analyzing": "Analyzing…",
     "analysis_failed": "Analysis failed — retry",
     "analysis_title": "Detected tempo and key, analyzed on this device",
+    "slices_count": "{count} slices",
     "export_json": "Export .json",
     "export_csv": "Export .csv",
     "export_title": "Download analysis for your DAW (Ableton)"

@@ -146,6 +146,9 @@
     if (found.key) {
       parts.push(found.key + (found.mode === "minor" ? " min" : " maj"));
     }
+    if (Array.isArray(found.slices) && found.slices.length > 0) {
+      parts.push($t("search.slices_count", { values: { count: found.slices.length } }));
+    }
     return parts.join(" · ");
   }
 
