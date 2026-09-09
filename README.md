@@ -13,13 +13,21 @@ Try queries like: `sick snares` · `grunge claps` · `metal riffs` ·
 
 - **Landing page** (`src/App.svelte`): branded DOGS Sampler hero with EN/ES
   i18n, responsive viewport-matrix layout, Tailwind v4 + SCSS.
+- **Search UI** (`src/components/SearchView.svelte`): search box with
+  debounce, per-provider result cards with inline `<audio>` previews,
+  license + attribution per hit, degraded-mode messaging, and a BYO
+  API-key settings panel (Freesound/Pixabay keys, localStorage only).
+  Opened from the hero's "Search samples" button; owns its own scroll
+  region inside the locked-viewport shell.
 - **Search service** (`src/lib/sampleService.js`): provider-agnostic layer.
   Freesound (APIv2, token auth) and Internet Archive (keyless) are
   implemented and verified against the live APIs; Pixabay is a documented
   stub until its sound-effects endpoint is confirmed.
-- **Not yet wired**: the search UI (search box, results list, audio
-  preview player, API-key settings panel). The service layer is ready —
-  the next milestone is a `SearchView` component that consumes it.
+- **Display helpers** (`src/lib/formatSamples.js`): pure, zero-dependency
+  duration/provider/license formatters consumed by the search UI,
+  pinned by `test/formatSamples.test.js` (13 tests).
+- Search smoke tests: `npm run test:smoke` (24 zero-dependency tests, no
+  network).
 
 ## Quick start (2 minutes)
 
@@ -93,9 +101,9 @@ zero-warning builds, and layouts for all five viewport modes
 
 ## Roadmap
 
-1. **Search UI** — search input + provider result cards + `<audio>` preview
-   player with waveform peek. Must handle the locked-viewport body CSS
-   (results need a scroll region; see note below).
+1. **Search UI** — ✅ landed (search input, result cards, `<audio>`
+   previews, key settings). Next refinements: waveform peek, per-card
+   tag chips.
 2. **Filters** — duration range, license filter, sort (relevance/downloads).
 3. **Key settings panel** — paste Freesound/Pixabay keys, stored locally.
 4. **Result caching** — localStorage/IndexedDB cache of recent searches to
