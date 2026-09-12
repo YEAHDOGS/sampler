@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0b0b0d">
 <title>Sampler: royalty-free sample search | DOGS</title>
-<meta name="description" content="DOGS Sampler finds royalty-free samples across Pixabay, Freesound, and the Internet Archive. Every hit analyzed: BPM, key, slice points.">
+<meta name="description" content="Every free sample. One search. Royalty-free discovery across Pixabay, Freesound, and the Internet Archive, with BPM, key, and slice analysis per hit.">
 <link rel="canonical" href="https://yeahdogs.github.io/sampler/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Sampler: royalty-free sample search | DOGS">
-<meta property="og:description" content="Every free sample. One search. Royalty-free discovery across Pixabay, Freesound, and the Internet Archive, with BPM, key, and slice analysis per hit.">
+<meta property="og:description" content="Every free sample. One search. Royalty-free sample discovery with per-hit BPM, key, and slice analysis.">
 <meta property="og:url" content="https://yeahdogs.github.io/sampler/">
 <meta property="og:image" content="https://yeahdogs.github.io/sampler/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -17,500 +17,409 @@
 <meta name="twitter:description" content="Every free sample. One search. Royalty-free sample discovery with per-hit BPM, key, and slice analysis.">
 <meta name="twitter:image" content="https://yeahdogs.github.io/sampler/og-image.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="shortcut icon" href="favicon.ico">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebApplication","name":"DOGS Sampler","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"Royalty-free sample discovery across Pixabay Sound Effects, Freesound, and the Internet Archive, with per-result BPM, key, and slice-point analysis and JSON/CSV export for DAW workflows.","offers":{"@type":"Offer","price":"0"},"author":{"@type":"Organization","name":"DOGS","url":"https://wearedogs.net"}}
+{"@context":"https://schema.org","@type":"WebApplication","name":"DOGS Sampler","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"Royalty-free sample discovery across Pixabay Sound Effects, Freesound, and the Internet Archive, with per-result BPM, key, and slice-point analysis and DAW-ready export.","offers":{"@type":"Offer","price":"0"},"author":{"@type":"Organization","name":"DOGS","url":"https://wearedogs.net"}}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"Where do the samples come from?","acceptedAnswer":{"@type":"Answer","text":"Three royalty-free sources: Pixabay Sound Effects, Freesound, and the Internet Archive audio collection. One search queries all of them."}},
+{"@type":"Question","name":"Where do the samples come from?","acceptedAnswer":{"@type":"Answer","text":"Three royalty-free sources: Pixabay Sound Effects, Freesound, and the Internet Archive audio collection. One search queries all three."}},
 {"@type":"Question","name":"Can I use the samples in released music?","acceptedAnswer":{"@type":"Answer","text":"Every result carries its own license from its source. Check the license on the samples you use before shipping a record."}},
-{"@type":"Question","name":"Do I need API keys?","acceptedAnswer":{"@type":"Answer","text":"No. Bring your own keys for the sources you use, or connect through DOGS."}},
+{"@type":"Question","name":"Do I need API keys?","acceptedAnswer":{"@type":"Answer","text":"No. Connect through DOGS or bring your own keys for the sources you use."}},
 {"@type":"Question","name":"What does analyzed mean?","acceptedAnswer":{"@type":"Answer","text":"On-device BPM and key detection for each result, plus transient slice-point detection, so you see tempo and slice markers before you download anything."}},
-{"@type":"Question","name":"What is the export for?","acceptedAnswer":{"@type":"Answer","text":"sampler export turns a track's analysis into a JSON sidecar or a markers CSV you can drop into a DAW session."}}
+{"@type":"Question","name":"What is the export for?","acceptedAnswer":{"@type":"Answer","text":"Turns a track analysis into a JSON sidecar or a markers CSV you can drop into a DAW session."}}
 ]}
 </script>
 <style>
 :root{
-  --bg:#0b0b0d; --panel:#131316; --ink:#f4f1e8; --mut:#a09d91;
-  --amber:#f2a71b; --amber-dim:rgba(242,167,27,.14); --line:#222226;
+  --bg:#0b0b0d; --ink:#f4f1e8; --mut:#b3aea0;
+  --amber:#f2a71b; --line:rgba(242,167,27,.22);
   --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
-  --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --disp:system-ui,-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;
+html{scroll-behavior:smooth;scroll-snap-type:y mandatory}
+body{background:var(--bg);color:var(--ink);font-family:var(--disp);line-height:1.45;
   -webkit-font-smoothing:antialiased;overflow-x:hidden}
 ::selection{background:var(--amber);color:#0b0b0d}
-a{color:inherit;text-decoration:none}
-.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
-.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--amber);text-transform:uppercase}
-h1,h2{font-weight:700;letter-spacing:-.02em;line-height:1.08}
-.skip{position:absolute;left:-9999px;top:0;background:var(--amber);color:#0b0b0d;padding:10px 16px;font-weight:700;z-index:200}
+a{color:inherit}
+img{display:block;max-width:100%}
+.skip{position:absolute;left:-9999px;top:0;background:var(--amber);color:#0b0b0d;padding:10px 16px;font-weight:700;z-index:300}
 .skip:focus{left:8px;top:8px}
 
-/* nav */
-.nav{position:sticky;top:0;z-index:100;background:rgba(11,11,13,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.nav-in{display:flex;align-items:center;justify-content:space-between;height:58px}
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-weight:700;letter-spacing:.14em;font-size:14px}
-.brand .dot{width:10px;height:10px;background:var(--amber);flex:none}
-.nav-links{display:none;gap:26px;font-size:13px;color:var(--mut)}
-.nav-links a{transition:color .18s}
-.nav-links a:hover{color:var(--ink)}
-@media(min-width:760px){.nav-links{display:flex}}
-.btn{display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
-  padding:13px 26px;border:1px solid transparent;cursor:pointer;transition:transform .16s,background .16s,color .16s,border-color .16s;will-change:transform}
-.btn:active{transform:scale(.97)}
-.btn-amber{background:var(--amber);color:#0b0b0d}
-.btn-amber:hover{background:#ffc04d}
-.btn-ghost{border-color:var(--line);color:var(--ink);background:transparent}
-.btn-ghost:hover{border-color:var(--amber);color:var(--amber)}
-.btn-sm{padding:9px 18px;font-size:13px}
+/* top bar */
+.bar{position:fixed;inset:0 0 auto 0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  height:58px;padding:0 18px;background:linear-gradient(rgba(11,11,13,.85),rgba(11,11,13,0));pointer-events:none}
+.bar a{pointer-events:auto}
+.wordmark{font-family:var(--mono);font-weight:700;letter-spacing:.18em;font-size:13px;text-decoration:none}
+.wordmark b{color:var(--amber)}
+.pill{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-decoration:none;color:#0b0b0d;
+  background:var(--amber);padding:9px 16px;border-radius:999px;font-weight:700}
+.pill:active{transform:scale(.96)}
 
-/* hero */
-.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
-#hero-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.55;pointer-events:none}
-.hero-in{position:relative;padding:84px 0 72px;max-width:640px}
-.hero h1{font-size:clamp(40px,10.5vw,76px);margin:18px 0 16px}
-.hero h1 .w{display:inline-block;will-change:transform,opacity}
-.hero p.sub{font-size:17px;color:var(--mut);max-width:46ch;margin-bottom:30px}
-.hero-ctas{display:flex;gap:12px;flex-wrap:wrap}
-.hero-meta{margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--mut);letter-spacing:.06em}
-.hero-meta b{color:var(--amber);font-weight:700}
+/* panels */
+.panel{position:relative;min-height:100svh;height:100svh;scroll-snap-align:start;scroll-snap-stop:always;
+  overflow:hidden;display:flex}
+.bg{position:absolute;inset:-8% 0;background-size:cover;background-position:center;will-change:transform}
+@supports (animation-timeline:view()){
+  .bg{animation:drift linear both;animation-timeline:view();animation-range:entry 0% exit 100%}
+  @keyframes drift{from{transform:translateY(-5%) scale(1.1)}to{transform:translateY(5%) scale(1.1)}}
+}
+.scrim{position:absolute;inset:0;pointer-events:none}
+.copy{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;justify-content:flex-end;
+  padding:84px 22px 64px}
+.copy.tl{justify-content:flex-start;padding-top:92px}
+.copy.mid{justify-content:center}
+.copy.right{align-items:flex-end;text-align:right;margin-left:auto}
+.giant{font-weight:900;letter-spacing:-.045em;line-height:.88;font-size:clamp(58px,19vw,220px);
+  color:var(--ink);text-transform:uppercase;white-space:nowrap}
+.giant .a{color:var(--amber)}
+.line{font-size:clamp(20px,4.6vw,34px);font-weight:700;letter-spacing:-.01em;margin-top:14px;max-width:20ch}
+.sub{color:var(--mut);font-size:15px;margin-top:10px;max-width:44ch}
+.k{font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--amber);text-transform:uppercase;margin-bottom:12px}
 
-/* sections */
-section.block{padding:72px 0;border-bottom:1px solid var(--line)}
-.block-head{margin-bottom:34px;max-width:640px}
-.block-head h2{font-size:clamp(28px,6.4vw,44px);margin:14px 0 12px}
-.block-head p{color:var(--mut);font-size:15.5px}
-.rows{display:grid;gap:0;border-top:1px solid var(--line)}
-.row{display:grid;grid-template-columns:1fr;gap:6px;padding:22px 4px;border-bottom:1px solid var(--line)}
-@media(min-width:760px){.row{grid-template-columns:220px 1fr;gap:24px;align-items:baseline}}
-.row .name{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.04em}
-.row .name .tag{display:inline-block;font-size:10px;color:var(--amber);border:1px solid var(--amber);padding:2px 8px;margin-left:10px;letter-spacing:.14em;vertical-align:2px}
-.row p{color:var(--mut);font-size:14.5px;max-width:62ch}
-.row p b{color:var(--ink);font-weight:600}
+/* mask reveal: overflow-hidden + inner translateY (transform only) */
+.mask{display:block;overflow:hidden}
+.mask>span{display:block;transform:translateY(110%);opacity:0}
+.in .mask>span{transform:translateY(0);opacity:1;transition:transform .8s cubic-bezier(.16,1,.3,1),opacity .6s ease;
+  transition-delay:var(--d,0s)}
 
-/* demo */
-.demo{background:var(--panel);border:1px solid var(--line);padding:22px}
-.demo-note{font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.08em;margin-bottom:16px}
-.demo-note b{color:var(--amber)}
-#wave{width:100%;height:96px;display:block;background:#0b0b0d;border:1px solid var(--line);margin-bottom:18px}
-.transport{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
-.play{width:56px;height:56px;background:var(--amber);color:#0b0b0d;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:transform .15s,background .15s;will-change:transform}
-.play:active{transform:scale(.94)}
-.play:hover{background:#ffc04d}
-.play svg{width:22px;height:22px;fill:#0b0b0d}
-.bpm{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:12px;color:var(--mut)}
-.bpm output{color:var(--amber);font-weight:700;font-size:15px;min-width:74px}
-input[type=range]{-webkit-appearance:none;appearance:none;width:150px;height:4px;background:var(--line);outline:none;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--amber);border:none;cursor:pointer}
-input[type=range]::-moz-range-thumb{width:18px;height:18px;background:var(--amber);border:none;cursor:pointer;border-radius:0}
-.steps{display:grid;gap:8px}
-.step-row{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:center}
-.voice{font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase}
-.pads{display:grid;grid-template-columns:repeat(16,1fr);gap:4px}
-.pad{aspect-ratio:1/1;background:#1d1d21;border:1px solid #2a2a2f;cursor:pointer;min-height:22px;
-  transition:background .1s,transform .1s,border-color .1s;will-change:transform}
-.pad:hover{border-color:var(--amber)}
-.pad.on{background:var(--amber);border-color:var(--amber)}
-.pad.on.alt{background:#c77f0e;border-color:#c77f0e}
-.pad.beat{border-top:2px solid #3a3a40}
-.pad.now{transform:scale(1.18)}
-@media (prefers-reduced-motion:reduce){.pad.now{transform:none;outline:2px solid #fff}}
-.demo-hint{margin-top:14px;font-size:12.5px;color:var(--mut)}
+/* chips + rows */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{font-family:var(--mono);font-size:12.5px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;
+  background:rgba(11,11,13,.55);color:var(--ink);cursor:pointer;min-height:44px}
+.chip[aria-pressed="true"]{background:var(--amber);color:#0b0b0d;border-color:var(--amber);font-weight:700}
+.chip:active{transform:scale(.96)}
+.rows{margin-top:14px;border-top:1px solid var(--line);max-width:560px}
+.row{display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:11px 2px;border-bottom:1px solid rgba(242,167,27,.12);font-size:14px}
+.row .n{font-weight:700;grid-column:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t{font-family:var(--mono);font-size:11.5px;color:var(--mut);grid-column:1/-1;grid-row:2}
+.row .s{font-family:var(--mono);font-size:10.5px;color:var(--amber);border:1px solid var(--line);
+  border-radius:6px;padding:3px 7px;white-space:nowrap;grid-column:2;grid-row:1;align-self:center}
+.rows[hidden],.demo-note[hidden]{display:none}
+.demo-note{font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;letter-spacing:.04em}
 
-/* export */
-.code{background:#08080a;border:1px solid var(--line);padding:20px;font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto;margin:0 0 14px;color:var(--ink)}
-.code .c{color:#6b6a62}.code .k{color:var(--amber)}
-.export-note{font-size:14px;color:var(--mut);max-width:62ch}
-.export-note b{color:var(--ink)}
+/* analysis card */
+.card{margin-top:20px;border:1px solid var(--line);border-radius:14px;background:rgba(11,11,13,.62);
+  backdrop-filter:blur(6px);padding:18px;max-width:520px}
+.card .fname{font-family:var(--mono);font-size:12px;color:var(--mut);letter-spacing:.06em;margin-bottom:12px}
+.stats{display:flex;gap:10px}
+.stat{flex:1;text-align:center;padding:12px 4px;border-radius:10px;background:rgba(242,167,27,.08)}
+.stat .v{font-family:var(--mono);font-weight:700;font-size:24px;color:var(--amber)}
+.stat .l{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--mut);margin-top:4px}
+.ex{font-family:var(--mono);font-size:10.5px;color:var(--mut);margin-top:10px;letter-spacing:.04em}
 
-/* faq */
-.faq{border-top:1px solid var(--line)}
-.faq details{border-bottom:1px solid var(--line)}
-.faq summary{list-style:none;cursor:pointer;padding:20px 4px;font-weight:700;font-size:16px;display:flex;justify-content:space-between;align-items:center;gap:16px}
-.faq summary::-webkit-details-marker{display:none}
-.faq summary .pm{font-family:var(--mono);color:var(--amber);font-size:20px;flex:none;transition:transform .18s;will-change:transform}
-.faq details[open] summary .pm{transform:rotate(45deg)}
-.faq .a{padding:0 4px 22px;color:var(--mut);font-size:14.5px;max-width:64ch}
+/* pads */
+.pads{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px;max-width:520px}
+.pad{aspect-ratio:1;border:1px solid var(--line);border-radius:12px;background:rgba(11,11,13,.62);
+  color:var(--ink);font-family:var(--mono);font-size:11px;letter-spacing:.08em;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;min-height:64px;touch-action:manipulation}
+.pad.hit{background:var(--amber);color:#0b0b0d;font-weight:700}
+.pad:active{transform:scale(.94)}
+
+/* form */
+.form{margin-top:20px;display:flex;gap:8px;max-width:520px}
+.form input{flex:1;min-width:0;background:rgba(11,11,13,.62);border:1px solid var(--line);border-radius:999px;
+  padding:13px 18px;color:var(--ink);font-size:15px;font-family:var(--disp)}
+.form input::placeholder{color:#8b877b}
+.form input:focus{outline:2px solid var(--amber);outline-offset:2px;border-color:var(--amber)}
+.form button{background:var(--amber);color:#0b0b0d;border:0;border-radius:999px;padding:13px 22px;
+  font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap;min-height:48px}
+.form button:active{transform:scale(.96)}
+.ok{font-family:var(--mono);font-size:13px;color:var(--amber);margin-top:12px}
+.honest{font-size:12.5px;color:var(--mut);margin-top:10px}
 
 /* footer */
-footer{padding:48px 0 110px}
-.foot-grid{display:grid;gap:28px;grid-template-columns:1fr}
-@media(min-width:760px){.foot-grid{grid-template-columns:1.4fr 1fr 1fr}}
-.foot-grid h4{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--mut);text-transform:uppercase;margin-bottom:14px}
-.foot-grid ul{list-style:none;display:grid;gap:10px;font-size:14px}
-.foot-grid a{color:var(--mut);transition:color .15s}
-.foot-grid a:hover{color:var(--amber)}
-.attrib{margin-top:36px;padding-top:22px;border-top:1px solid var(--line);font-size:13px;color:var(--mut)}
-.attrib a{color:var(--ink);font-weight:700;border-bottom:1px solid var(--amber)}
-.attrib a:hover{color:var(--amber)}
+.foot{position:relative;z-index:2;margin-top:34px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.foot img{height:34px;width:auto}
+.foot nav{display:flex;gap:16px;font-size:12.5px;color:var(--mut)}
+.foot nav a{text-decoration:none}
 
-/* sticky mobile cta */
-.sticky-cta{position:fixed;left:0;right:0;bottom:0;z-index:90;padding:10px 16px calc(10px + env(safe-area-inset-bottom));
-  background:rgba(11,11,13,.94);border-top:1px solid var(--line);backdrop-filter:blur(10px)}
-.sticky-cta .btn{width:100%}
-@media(min-width:760px){.sticky-cta{display:none}}
-
-/* reveal */
-.rv{opacity:0;transform:translateY(18px)}
-.rv.in{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease}
-@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}.rv.in{transition:none}}
+@media (min-width:900px){.copy{padding:84px 64px 72px}}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .bg{animation:none}
+  .in .mask>span{transition:none;transform:none;opacity:1}
+  .mask>span{transform:none;opacity:1}
+}
 </style>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
-
-<header class="nav">
-  <div class="wrap nav-in">
-    <a class="brand" href="#top" aria-label="Sampler home"><span class="dot" aria-hidden="true"></span>SAMPLER</a>
-    <nav class="nav-links" aria-label="Sections">
-      <a href="#sources">Sources</a><a href="#analysis">Analysis</a><a href="#demo">Demo</a><a href="#export">Export</a><a href="#faq">FAQ</a>
-    </nav>
-    <a class="btn btn-amber btn-sm" href="https://github.com/YEAHDOGS/sampler">Get the code</a>
-  </div>
+<a class="skip" href="#p1">Skip to content</a>
+<header class="bar">
+  <a class="wordmark" href="#p1">DOGS <b>SAMPLER</b></a>
+  <a class="pill" href="#p7">Get the drop</a>
 </header>
 
-<main id="main">
-<section class="hero" id="top">
-  <canvas id="hero-canvas" aria-hidden="true"></canvas>
-  <div class="wrap hero-in">
-    <p class="kicker">DOGS Sampler</p>
-    <h1><span class="w">Every</span> <span class="w">free</span> <span class="w">sample.</span><br><span class="w">One</span> <span class="w">search.</span></h1>
-    <p class="sub">Royalty-free discovery across Pixabay Sound Effects, Freesound, and the Internet Archive. Type what you want to hear: sick snares, grunge claps, silky pads.</p>
-    <div class="hero-ctas">
-      <a class="btn btn-amber" href="https://github.com/YEAHDOGS/sampler">Get the code</a>
-      <a class="btn btn-ghost" href="#demo">Hear the demo</a>
-    </div>
-    <p class="hero-meta"><b>3</b> sources &middot; <b>BPM + key</b> per hit &middot; <b>slice grids</b> for chopping &middot; <b>JSON sidecar</b> export</p>
+<main>
+<!-- 1 SAMPLER -->
+<section class="panel" id="p1" aria-label="Sampler">
+  <div class="bg" style="background-image:url('img/hero.jpg')" role="img" aria-label="Hands digging through vinyl records in amber light"></div>
+  <div class="scrim" style="background:linear-gradient(180deg,rgba(11,11,13,.25) 0%,rgba(11,11,13,.05) 40%,rgba(11,11,13,.88) 100%)"></div>
+  <div class="copy">
+    <p class="k mask"><span style="--d:.05s">Royalty-free sample search</span></p>
+    <h1 class="giant mask"><span style="--d:.12s">SAMP<span class="a">LER</span></span></h1>
+    <p class="line mask"><span style="--d:.24s">Every free sample. One search.</span></p>
+    <p class="sub mask"><span style="--d:.34s">Dig across Pixabay, Freesound, and the Internet Archive in one box. Every hit arrives read: tempo, key, slices.</span></p>
   </div>
 </section>
 
-<section class="block" id="sources">
-  <div class="wrap">
-    <div class="block-head rv">
-      <p class="kicker">Sources</p>
-      <h2>Three crates. One dig.</h2>
-      <p>No more tab-hopping across sample sites. Sampler queries every royalty-free source at once and ranks what comes back.</p>
-    </div>
-    <div class="rows rv">
-      <div class="row"><div class="name">Pixabay Sound Effects <span class="tag">SOURCE</span></div><p>Stems, one-shots, and field recordings from Pixabay's royalty-free library. Search it like you think: <b>"thunder lightning"</b>, <b>"metal riffs"</b>.</p></div>
-      <div class="row"><div class="name">Freesound <span class="tag">SOURCE</span></div><p>The deep community archive. Obscure percussion, foley, and textures you will not find in a commercial pack.</p></div>
-      <div class="row"><div class="name">Internet Archive <span class="tag">SOURCE</span></div><p>The public-domain vault. Historical recordings and raw audio, free to sample and flip.</p></div>
-    </div>
+<!-- 2 SOURCES -->
+<section class="panel" id="p2" aria-label="Sources">
+  <div class="bg" style="background-image:url('img/reel.jpg')" role="img" aria-label="Reel-to-reel tape machine glowing amber in a dark studio"></div>
+  <div class="scrim" style="background:linear-gradient(90deg,rgba(11,11,13,.9) 0%,rgba(11,11,13,.35) 55%,rgba(11,11,13,.15) 100%)"></div>
+  <div class="copy mid right">
+    <h2 class="giant mask"><span style="--d:.05s">THREE<br><span class="a">VAULTS</span></span></h2>
+    <p class="line mask"><span style="--d:.2s">One search. Three vaults.</span></p>
+    <p class="sub mask"><span style="--d:.3s">Pixabay Sound Effects. Freesound. The Internet Archive audio collection. Three royalty-free libraries, queried as one.</span></p>
   </div>
 </section>
 
-<section class="block" id="analysis">
-  <div class="wrap">
-    <div class="block-head rv">
-      <p class="kicker">Analysis</p>
-      <h2>Analyzed, not just listed.</h2>
-      <p>Every result runs through on-device analysis, so you know the tempo and the chops before you download anything.</p>
-    </div>
-    <div class="rows rv">
-      <div class="row"><div class="name">BPM + Key <span class="tag">ON DEVICE</span></div><p>Client-side tempo and key detection on each hit, pinned to <b>60 to 180 BPM</b>. Sort your results by what fits the track, not by upload date.</p></div>
-      <div class="row"><div class="name">Slice points <span class="tag">ONSET</span></div><p>Transient detection finds the hits inside a sample, so a loop arrives pre-chopped and ready to rearrange.</p></div>
-      <div class="row"><div class="name">Find similar <span class="tag">RANKING</span></div><p>Pick a result you like and re-rank the whole crate by <b>musical similarity</b>. One good snare finds you twenty more.</p></div>
-      <div class="row"><div class="name">Slice grids <span class="tag">MIDI</span></div><p>Slices map chromatically to MIDI with gapless tiling and crossfades. Play a chopped loop from your keyboard like an instrument.</p></div>
-    </div>
+<!-- 3 SEARCH -->
+<section class="panel" id="p3" aria-label="Search">
+  <div class="bg" style="background-image:url('img/desk.jpg')" role="img" aria-label="Studio monitor glowing with amber audio waveforms"></div>
+  <div class="scrim" style="background:linear-gradient(180deg,rgba(11,11,13,.82) 0%,rgba(11,11,13,.55) 50%,rgba(11,11,13,.9) 100%)"></div>
+  <div class="copy mid">
+    <h2 class="giant mask"><span style="--d:.05s">SEA<span class="a">RCH</span></span></h2>
+    <p class="line mask"><span style="--d:.2s">Talk like a producer. It gets it.</span></p>
+    <div class="chips mask" style="--d:.3s" role="group" aria-label="Example searches"><span>
+      <button class="chip" aria-pressed="false" data-q="snare">sick snares</button>
+      <button class="chip" aria-pressed="false" data-q="clap">grunge claps</button>
+      <button class="chip" aria-pressed="false" data-q="metal">metal riffs</button>
+      <button class="chip" aria-pressed="false" data-q="thunder">thunder</button>
+    </span></div>
+    <div class="rows mask" style="--d:.38s" id="rows" hidden></div>
+    <p class="demo-note mask" style="--d:.42s"><span>concept demo: local rows, real search hits the vaults</span></p>
   </div>
 </section>
 
-<section class="block" id="demo">
-  <div class="wrap">
-    <div class="block-head rv">
-      <p class="kicker">Demo</p>
-      <h2>Chop first. Ask later.</h2>
-      <p>A sixteen-step loop builder in the spirit of the slice grid. Tap the pads, move the tempo, hear it loop.</p>
-    </div>
-    <div class="demo rv">
-      <p class="demo-note"><b>CONCEPT DEMO.</b> Sounds are synthesized live in your browser, not pulled from the sample library.</p>
-      <canvas id="wave" width="800" height="96" role="img" aria-label="Waveform of the current loop pattern"></canvas>
-      <div class="transport">
-        <button class="play" id="play" aria-label="Play loop" aria-pressed="false">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path id="play-icon" d="M8 5v14l11-7z"/></svg>
-        </button>
-        <div class="bpm"><label for="bpm">TEMPO</label><input type="range" id="bpm" min="60" max="180" value="120" step="1" aria-valuetext="120 BPM"><output id="bpm-out" for="bpm">120 BPM</output></div>
+<!-- 4 READ -->
+<section class="panel" id="p4" aria-label="Analysis">
+  <div class="bg" style="background-image:url('img/hero.jpg')" role="img" aria-label="Vinyl crates under warm lamplight"></div>
+  <div class="scrim" style="background:linear-gradient(180deg,rgba(11,11,13,.9) 0%,rgba(11,11,13,.5) 45%,rgba(11,11,13,.25) 100%)"></div>
+  <div class="copy tl">
+    <h2 class="giant mask"><span style="--d:.05s">RE<span class="a">A</span>D</span></h2>
+    <p class="line mask"><span style="--d:.2s">Every hit read before you download.</span></p>
+    <div class="card mask" style="--d:.3s">
+      <p class="fname">grunge_clap_layer_03.wav</p>
+      <div class="stats">
+        <div class="stat"><div class="v">128</div><div class="l">BPM</div></div>
+        <div class="stat"><div class="v">Fm</div><div class="l">KEY</div></div>
+        <div class="stat"><div class="v">16</div><div class="l">SLICES</div></div>
       </div>
-      <div class="steps" id="steps" role="group" aria-label="Sixteen step sequencer"></div>
-      <p class="demo-hint">Pads are keyboard reachable: tab to a pad, press Enter or Space to toggle it.</p>
+      <p class="ex">example analysis: on-device BPM, key, and transient slice points per result</p>
     </div>
   </div>
 </section>
 
-<section class="block" id="export">
-  <div class="wrap">
-    <div class="block-head rv">
-      <p class="kicker">Export</p>
-      <h2>Straight into the session.</h2>
-      <p>Analysis travels with the sample. Export a track's BPM, key, slices, and loops, then drop the file into your DAW workflow.</p>
-    </div>
-    <div class="rv">
-      <pre class="code" aria-label="Sampler export command"><span class="c"># one command, two artifacts</span>
-sampler export <span class="k">&lt;track-id&gt;</span> --format json --out kick.sampler.json
-sampler export <span class="k">&lt;track-id&gt;</span> --format csv  --out kick.markers.csv</pre>
-      <p class="export-note"><b>JSON sidecar</b> carries the full analysis record: BPM, key, slices, loops, markers. <b>Markers CSV</b> is bar, beat, time, label, kind, ready for timeline import. Both come from the same zero-dependency engine that powers the browser UI.</p>
-    </div>
+<!-- 5 DROP -->
+<section class="panel" id="p5" aria-label="Export">
+  <div class="bg" style="background-image:url('img/desk.jpg')" role="img" aria-label="Amber waveforms on a studio screen"></div>
+  <div class="scrim" style="background:linear-gradient(270deg,rgba(11,11,13,.9) 0%,rgba(11,11,13,.35) 60%,rgba(11,11,13,.15) 100%)"></div>
+  <div class="copy mid right">
+    <h2 class="giant mask"><span style="--d:.05s">DR<span class="a">O</span>P</span></h2>
+    <p class="line mask"><span style="--d:.2s">Straight into your DAW.</span></p>
+    <p class="sub mask"><span style="--d:.3s">JSON sidecar or markers CSV. Tempo and slice points ride along, ready for the session.</span></p>
   </div>
 </section>
 
-<section class="block" id="faq">
-  <div class="wrap">
-    <div class="block-head rv">
-      <p class="kicker">FAQ</p>
-      <h2>Asked, answered.</h2>
+<!-- 6 PLAY -->
+<section class="panel" id="p6" aria-label="Play">
+  <div class="bg" style="background-image:url('img/pads.jpg')" role="img" aria-label="Drum machine pads glowing amber in the dark"></div>
+  <div class="scrim" style="background:linear-gradient(180deg,rgba(11,11,13,.75) 0%,rgba(11,11,13,.45) 50%,rgba(11,11,13,.92) 100%)"></div>
+  <div class="copy mid">
+    <h2 class="giant mask"><span style="--d:.05s">PL<span class="a">A</span>Y</span></h2>
+    <p class="line mask"><span style="--d:.2s">Bang the pads. Feel the crates.</span></p>
+    <div class="pads mask" style="--d:.3s" role="group" aria-label="Drum pads">
+      <button class="pad" data-pad="kick">KICK</button>
+      <button class="pad" data-pad="snare">SNARE</button>
+      <button class="pad" data-pad="hat">HAT</button>
+      <button class="pad" data-pad="clap">CLAP</button>
+      <button class="pad" data-pad="perc">PERC</button>
+      <button class="pad" data-pad="tom">TOM</button>
+      <button class="pad" data-pad="shkr">SHKR</button>
+      <button class="pad" data-pad="rim">RIM</button>
     </div>
-    <div class="faq rv">
-      <details><summary>Where do the samples come from? <span class="pm" aria-hidden="true">+</span></summary><div class="a">Three royalty-free sources: Pixabay Sound Effects, Freesound, and the Internet Archive audio collection. One search queries all of them.</div></details>
-      <details><summary>Can I use the samples in released music? <span class="pm" aria-hidden="true">+</span></summary><div class="a">Every result carries its own license from its source. Check the license on the samples you use before shipping a record.</div></details>
-      <details><summary>Do I need API keys? <span class="pm" aria-hidden="true">+</span></summary><div class="a">No. Bring your own keys for the sources you use, or connect through DOGS.</div></details>
-      <details><summary>What does "analyzed" mean? <span class="pm" aria-hidden="true">+</span></summary><div class="a">On-device BPM and key detection for each result, plus transient slice-point detection, so you see tempo and slice markers before you download anything.</div></details>
-      <details><summary>What is the export for? <span class="pm" aria-hidden="true">+</span></summary><div class="a"><code>sampler export</code> turns a track's analysis into a JSON sidecar or a markers CSV you can drop into a DAW session.</div></details>
+    <p class="demo-note mask" style="--d:.38s"><span>sounds synthesized live on this page, no files needed</span></p>
+  </div>
+</section>
+
+<!-- 7 FIRST -->
+<section class="panel" id="p7" aria-label="Notify">
+  <div class="bg" style="background-image:url('img/reel.jpg')" role="img" aria-label="Tape reels turning in amber light"></div>
+  <div class="scrim" style="background:linear-gradient(180deg,rgba(11,11,13,.8) 0%,rgba(11,11,13,.6) 55%,rgba(11,11,13,.95) 100%)"></div>
+  <div class="copy mid">
+    <h2 class="giant mask"><span style="--d:.05s">FI<span class="a">R</span>ST</span></h2>
+    <p class="line mask"><span style="--d:.2s">First through the crates.</span></p>
+    <form class="form mask" style="--d:.3s" id="notify" novalidate>
+      <input type="email" name="email" placeholder="you@studio.com" aria-label="Email address" required>
+      <button type="submit">Notify me</button>
+    </form>
+    <p class="ok" id="okmsg" hidden>Locked in. You will hear it first.</p>
+    <p class="honest mask" style="--d:.36s"><span>No account. Your email stays in this browser until the real list opens.</span></p>
+    <div class="foot">
+      <a href="https://wearedogs.net" aria-label="Made by DOGS, visit wearedogs.net"><img src="img/badge.png" alt="This product was made by DOGS" width="420" height="139"></a>
+      <nav><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav>
     </div>
   </div>
 </section>
 </main>
-
-<footer>
-  <div class="wrap">
-    <div class="foot-grid">
-      <div>
-        <h4>Sampler</h4>
-        <ul><li><a href="#sources">Sources</a></li><li><a href="#analysis">Analysis</a></li><li><a href="#demo">Demo</a></li><li><a href="#export">Export</a></li></ul>
-      </div>
-      <div>
-        <h4>Project</h4>
-        <ul><li><a href="https://github.com/YEAHDOGS/sampler">Code on GitHub</a></li><li><a href="https://github.com/YEAHDOGS/sampler/issues">Report an issue</a></li><li><a href="https://wearedogs.net">wearedogs.net</a></li></ul>
-      </div>
-      <div>
-        <h4>Legal</h4>
-        <ul><li><a href="privacy.html">Privacy</a></li><li><a href="terms.html">Terms</a></li></ul>
-      </div>
-    </div>
-    <p class="attrib">This product was made by <a href="https://wearedogs.net">DOGS</a></p>
-  </div>
-</footer>
-
-<div class="sticky-cta"><a class="btn btn-amber" href="https://github.com/YEAHDOGS/sampler">Get the code</a></div>
-
 <script>
+/* panel entry reveals: transform + opacity only */
 (function(){
-"use strict";
-var RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/* ---------- hero canvas: procedural waveform, transform-free canvas draws ---------- */
-(function hero(){
-  var cv = document.getElementById("hero-canvas");
-  if(!cv) return;
-  var ctx = cv.getContext("2d"), raf = 0, t = 0, visible = true;
-  function size(){
-    var r = cv.parentElement.getBoundingClientRect(), d = Math.min(window.devicePixelRatio||1, 2);
-    cv.width = Math.max(1, Math.floor(r.width*d)); cv.height = Math.max(1, Math.floor(r.height*d));
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var panels = document.querySelectorAll('.panel');
+  if(reduce || !('IntersectionObserver' in window)){
+    panels.forEach(function(p){ p.classList.add('in'); });
+    return;
   }
-  function draw(){
-    var W = cv.width, H = cv.height;
-    ctx.clearRect(0,0,W,H);
-    var bars = Math.max(48, Math.floor(W/22)), bw = W/bars;
-    ctx.fillStyle = "#f2a71b";
-    for(var i=0;i<bars;i++){
-      var n = Math.sin(i*.7 + t*.9) * .5 + Math.sin(i*.23 - t*.5) * .35 + Math.sin(i*1.7 + t*1.3) * .15;
-      var h = Math.abs(n) * H * .34 + 2;
-      ctx.globalAlpha = .12 + Math.abs(n) * .30;
-      var x = i*bw + bw*.28;
-      ctx.fillRect(x, H/2 - h/2, bw*.44, h);
-    }
-    ctx.globalAlpha = 1;
-  }
-  function tick(){ if(document.hidden || !visible) return; t += .016; draw(); raf = requestAnimationFrame(tick); }
-  function start(){ if(RM || raf) { draw(); return; } raf = requestAnimationFrame(tick); }
-  function stop(){ if(raf){ cancelAnimationFrame(raf); raf = 0; } }
-  size(); window.addEventListener("resize", size);
-  new IntersectionObserver(function(es){ visible = es[0].isIntersecting; if(visible) start(); else stop(); }).observe(cv);
-  start();
-})();
-
-/* ---------- hero headline: staggered word rise (opacity/transform only) ---------- */
-(function headline(){
-  var words = document.querySelectorAll(".hero h1 .w");
-  if(RM) return;
-  words.forEach(function(w,i){
-    w.style.opacity = "0"; w.style.transform = "translateY(26px)";
-    w.animate(
-      [{opacity:0, transform:"translateY(26px)"},{opacity:1, transform:"translateY(0)"}],
-      {duration:650, delay:120 + i*80, easing:"cubic-bezier(.2,.7,.2,1)", fill:"forwards"}
-    );
-  });
-})();
-
-/* ---------- reveal on scroll ---------- */
-(function reveal(){
-  var els = document.querySelectorAll(".rv");
-  if(RM || !("IntersectionObserver" in window)){ els.forEach(function(e){e.classList.add("in")}); return; }
   var io = new IntersectionObserver(function(es){
-    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
-  }, {threshold:.12});
-  els.forEach(function(e){ io.observe(e); });
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  },{threshold:0.35});
+  panels.forEach(function(p){ io.observe(p); });
 })();
 
-/* ---------- loop builder: 16-step sequencer, WebAudio synthesized drums ---------- */
-(function seq(){
-  var STEPS = 16;
-  var VOICES = [
-    {name:"KICK",  amp:.95},
-    {name:"SNARE", amp:.70},
-    {name:"HAT",   amp:.38},
-    {name:"CLAP",  amp:.55}
+/* search concept demo: chips filter local rows */
+(function(){
+  var DATA = [
+    {n:'snare_crack_140.wav',  t:'128 BPM · Fm · snare',      s:'Freesound', q:['snare']},
+    {n:'snare_dusty_break.wav',t:'96 BPM · Gm · snare',       s:'Archive',   q:['snare']},
+    {n:'clap_grunge_stack.wav',t:'90 BPM · Cm · clap',        s:'Pixabay',   q:['clap']},
+    {n:'clap_alley_verb.wav',  t:'100 BPM · Am · clap',       s:'Freesound', q:['clap']},
+    {n:'riff_metal_chug.wav',  t:'140 BPM · Em · metal',      s:'Pixabay',   q:['metal']},
+    {n:'riff_doom_drone.wav',  t:'70 BPM · Dm · metal',       s:'Archive',   q:['metal']},
+    {n:'thunder_roll_low.wav', t:'60 BPM · — · thunder',      s:'Freesound', q:['thunder']},
+    {n:'thunder_crack_hit.wav',t:'— · — · thunder',           s:'Pixabay',   q:['thunder']}
   ];
-  var pattern = [
-    [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
-    [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
-    [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
-    [0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0]
-  ];
-
-  var wrap = document.getElementById("steps");
-  var pads = [];
-  VOICES.forEach(function(v, vi){
-    var row = document.createElement("div"); row.className = "step-row";
-    var lab = document.createElement("span"); lab.className = "voice"; lab.textContent = v.name; row.appendChild(lab);
-    var grid = document.createElement("div"); grid.className = "pads"; grid.setAttribute("role","group"); grid.setAttribute("aria-label", v.name + " steps");
-    pads[vi] = [];
-    for(var s=0;s<STEPS;s++){
-      (function(vi,s){
-        var b = document.createElement("button");
-        b.type = "button"; b.className = "pad" + (s%4===0 ? " beat" : "");
-        b.setAttribute("aria-pressed", pattern[vi][s] ? "true" : "false");
-        b.setAttribute("aria-label", VOICES[vi].name + " step " + (s+1));
-        if(pattern[vi][s]){ b.classList.add("on"); if(vi===1) b.classList.add("alt"); }
-        b.addEventListener("click", function(){
-          pattern[vi][s] = pattern[vi][s] ? 0 : 1;
-          b.classList.toggle("on", !!pattern[vi][s]);
-          if(vi===1) b.classList.toggle("alt", !!pattern[vi][s]);
-          b.setAttribute("aria-pressed", pattern[vi][s] ? "true" : "false");
-          drawWave(cur);
-        });
-        grid.appendChild(b); pads[vi][s] = b;
-      })(vi,s);
-    }
-    row.appendChild(grid); wrap.appendChild(row);
+  var chips = document.querySelectorAll('.chip');
+  var rows = document.getElementById('rows');
+  function render(q){
+    rows.innerHTML = '';
+    DATA.filter(function(d){ return d.q.indexOf(q) > -1; }).forEach(function(d){
+      var r = document.createElement('div'); r.className = 'row';
+      var n = document.createElement('span'); n.className = 'n'; n.textContent = d.n;
+      var t = document.createElement('span'); t.className = 't'; t.textContent = d.t;
+      var s = document.createElement('span'); s.className = 's'; s.textContent = d.s;
+      r.appendChild(n); r.appendChild(t); r.appendChild(s); rows.appendChild(r);
+    });
+    rows.hidden = false;
+  }
+  chips.forEach(function(c){
+    c.addEventListener('click', function(){
+      var on = c.getAttribute('aria-pressed') === 'true';
+      chips.forEach(function(x){ x.setAttribute('aria-pressed','false'); });
+      if(on){ rows.hidden = true; return; }
+      c.setAttribute('aria-pressed','true');
+      render(c.getAttribute('data-q'));
+    });
   });
+})();
 
-  /* waveform render: amplitude bars + slice markers at trigger steps */
-  var wave = document.getElementById("wave"), wctx = wave.getContext("2d");
-  function drawWave(playStep){
-    var W = wave.width, H = wave.height;
-    wctx.clearRect(0,0,W,H);
-    var sw = W/STEPS;
-    for(var s=0;s<STEPS;s++){
-      var amp = 0, trig = false;
-      for(var v=0;v<4;v++){ if(pattern[v][s]){ amp += VOICES[v].amp; trig = true; } }
-      if(trig){
-        wctx.fillStyle = "rgba(242,167,27,.18)";
-        wctx.fillRect(s*sw, 0, 2, H); /* slice marker */
-        amp = Math.min(1, amp);
-        var h = amp * (H*.8);
-        wctx.fillStyle = s===playStep ? "#ffc04d" : "#f2a71b";
-        wctx.fillRect(s*sw + sw*.22, H/2 - h/2, sw*.56, h);
-      } else {
-        wctx.fillStyle = "#1d1d21";
-        wctx.fillRect(s*sw + sw*.44, H/2 - 1, sw*.12, 2);
-      }
+/* drum pads: WebAudio-synthesized percussion */
+(function(){
+  var ctx = null, master = null;
+  function ac(){
+    if(!ctx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      ctx = new AC();
+      master = ctx.createDynamicsCompressor();
+      var g = ctx.createGain(); g.gain.value = 0.8;
+      master.connect(g); g.connect(ctx.destination);
     }
+    if(ctx.state === 'suspended') ctx.resume();
+    return ctx;
   }
-
-  /* --- audio engine --- */
-  var ac = null, noiseBuf = null, bpm = 120;
-  function audio(){
-    if(ac) return ac;
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if(!AC) return null;
-    ac = new AC();
-    var len = ac.sampleRate * 1, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
-    for(var i=0;i<len;i++) d[i] = Math.random()*2-1;
-    noiseBuf = buf;
-    return ac;
-  }
-  function env(g, t, peak, dur){
-    g.gain.setValueAtTime(peak, t);
-    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  function noiseBuf(dur){
+    var b = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+    var d = b.getChannelData(0);
+    for(var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return b;
   }
   function kick(t){
-    var o = ac.createOscillator(), g = ac.createGain();
-    o.type = "sine";
-    o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(48, t+.11);
-    env(g, t, .95, .16); o.connect(g).connect(ac.destination); o.start(t); o.stop(t+.18);
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+    g.gain.setValueAtTime(1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.3);
   }
   function snare(t){
-    var n = ac.createBufferSource(); n.buffer = noiseBuf;
-    var f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = .8;
-    var g = ac.createGain(); env(g, t, .7, .14);
-    n.connect(f).connect(g).connect(ac.destination); n.start(t); n.stop(t+.16);
-    var o = ac.createOscillator(), g2 = ac.createGain(); o.type = "triangle"; o.frequency.value = 190;
-    env(g2, t, .4, .08); o.connect(g2).connect(ac.destination); o.start(t); o.stop(t+.1);
+    var n = ctx.createBufferSource(); n.buffer = noiseBuf(0.2);
+    var f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1500;
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    n.connect(f); f.connect(g); g.connect(master); n.start(t);
+    var o = ctx.createOscillator(), g2 = ctx.createGain();
+    o.frequency.value = 190; g2.gain.setValueAtTime(0.5, t); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    o.connect(g2); g2.connect(master); o.start(t); o.stop(t + 0.12);
   }
-  function hat(t){
-    var n = ac.createBufferSource(); n.buffer = noiseBuf;
-    var f = ac.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 8000;
-    var g = ac.createGain(); env(g, t, .38, .045);
-    n.connect(f).connect(g).connect(ac.destination); n.start(t); n.stop(t+.06);
+  function hat(t, open){
+    var n = ctx.createBufferSource(); n.buffer = noiseBuf(open ? 0.3 : 0.06);
+    var f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000;
+    var g = ctx.createGain(); var d = open ? 0.28 : 0.05;
+    g.gain.setValueAtTime(0.4, t); g.gain.exponentialRampToValueAtTime(0.001, t + d);
+    n.connect(f); f.connect(g); g.connect(master); n.start(t);
   }
   function clap(t){
-    for(var i=0;i<3;i++){
-      var tt = t + i*.018;
-      var n = ac.createBufferSource(); n.buffer = noiseBuf;
-      var f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1200; f.Q.value = 1.4;
-      var g = ac.createGain(); env(g, tt, .5, .09);
-      n.connect(f).connect(g).connect(ac.destination); n.start(tt); n.stop(tt+.1);
+    for(var i = 0; i < 3; i++){
+      (function(i){
+        var n = ctx.createBufferSource(); n.buffer = noiseBuf(0.05);
+        var f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800;
+        var g = ctx.createGain(); var tt = t + i * 0.03;
+        g.gain.setValueAtTime(0.6, tt); g.gain.exponentialRampToValueAtTime(0.001, tt + 0.06);
+        n.connect(f); f.connect(g); g.connect(master); n.start(tt);
+      })(i);
     }
   }
-  var HITS = [kick, snare, hat, clap];
-
-  var playing = false, step = 0, nextT = 0, timer = 0, cur = -1;
-  var btn = document.getElementById("play"), icon = document.getElementById("play-icon");
-  var bpmIn = document.getElementById("bpm"), bpmOut = document.getElementById("bpm-out");
-  bpmIn.addEventListener("input", function(){
-    bpm = Math.max(60, Math.min(180, parseInt(bpmIn.value,10) || 120));
-    bpmOut.textContent = bpm + " BPM";
-    bpmIn.setAttribute("aria-valuetext", bpm + " BPM");
+  function perc(t){
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.setValueAtTime(620, t); o.frequency.exponentialRampToValueAtTime(310, t + 0.08);
+    g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.16);
+  }
+  function tom(t){
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(58, t + 0.2);
+    g.gain.setValueAtTime(0.8, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.32);
+  }
+  function rim(t){
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = 1750;
+    g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.06);
+  }
+  var FNS = {kick:kick, snare:snare, hat:function(t){hat(t,false);}, clap:clap, perc:perc, tom:tom, shkr:function(t){hat(t,true);}, rim:rim};
+  var KEYMAP = {1:'kick',2:'snare',3:'hat',4:'clap',5:'perc',6:'tom',7:'shkr',8:'rim'};
+  function play(name, el){
+    if(!ac()) return;
+    var t = ctx.currentTime + 0.001;
+    FNS[name](t);
+    if(el){ el.classList.add('hit'); setTimeout(function(){ el.classList.remove('hit'); }, 140); }
+  }
+  document.querySelectorAll('.pad').forEach(function(p){
+    p.addEventListener('pointerdown', function(e){ e.preventDefault(); play(p.getAttribute('data-pad'), p); });
   });
-  function highlight(s){
-    if(cur >= 0) for(var v=0;v<4;v++) pads[v][cur].classList.remove("now");
-    cur = s;
-    if(s >= 0) for(var v2=0;v2<4;v2++) pads[v2][s].classList.add("now");
-    drawWave(s);
-  }
-  function schedule(){
-    var stepDur = 60/bpm/4;
-    while(nextT < ac.currentTime + .12){
-      for(var v=0;v<4;v++) if(pattern[v][step]) HITS[v](nextT);
-      var sNow = step;
-      var delay = Math.max(0, (nextT - ac.currentTime) * 1000);
-      setTimeout(function(){ if(playing) highlight(sNow); }, delay);
-      nextT += stepDur; step = (step+1) % STEPS;
-    }
-  }
-  function play(){
-    if(!audio()) return;
-    if(ac.state === "suspended") ac.resume();
-    playing = true; step = 0; nextT = ac.currentTime + .06;
-    timer = setInterval(schedule, 25); schedule();
-    icon.setAttribute("d", "M7 5h4v14H7zM13 5h4v14h-4z");
-    btn.setAttribute("aria-label","Stop loop"); btn.setAttribute("aria-pressed","true");
-  }
-  function stop(){
-    playing = false; clearInterval(timer); highlight(-1);
-    icon.setAttribute("d", "M8 5v14l11-7z");
-    btn.setAttribute("aria-label","Play loop"); btn.setAttribute("aria-pressed","false");
-  }
-  btn.addEventListener("click", function(){ playing ? stop() : play(); });
-  drawWave(-1);
+  document.addEventListener('keydown', function(e){
+    var name = KEYMAP[e.key]; if(!name) return;
+    var el = document.querySelector('.pad[data-pad="' + name + '"]');
+    play(name, el);
+  });
 })();
+
+/* notify: honest localStorage capture */
+(function(){
+  var form = document.getElementById('notify');
+  var ok = document.getElementById('okmsg');
+  if(!form) return;
+  try{
+    if(localStorage.getItem('sampler-notify')){ form.hidden = true; ok.hidden = false; }
+  }catch(e){}
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var input = form.querySelector('input');
+    if(!input.value || input.value.indexOf('@') < 0){ input.focus(); return; }
+    try{ localStorage.setItem('sampler-notify', input.value); }catch(e){}
+    form.hidden = true; ok.hidden = false;
+  });
 })();
 </script>
 </body>
